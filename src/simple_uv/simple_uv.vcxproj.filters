@@ -33,9 +33,6 @@
     <ClInclude Include="tcpserver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="tcpserverprotocolprocess.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="thread_uv.h">
       <Filter>头文件</Filter>
     </ClInclude>

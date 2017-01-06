@@ -136,13 +136,13 @@ inline bool CharToInt64(const unsigned char* charnum, uint64_t& intnum)
 
 #define NET_PACKAGE_VERSION 0x01
 typedef struct _NetPacket{//传输自定义数据包头结构
-	int32_t version;        //封包的版本号，不同版本包的定义可能不同  :0-3
+	size_t version;        //封包的版本号，不同版本包的定义可能不同  :0-3
 	unsigned char header;   //包头-可自定义，例如0x02                 :4
 	unsigned char tail;     //包尾-可自定义，例如0x03                 :5
 	unsigned char check[16];//pack data校验值-16字节的md5二进制数据   :6-21
-	int32_t type;           //包数据的类型                            :22-25
-	int32_t datalen;        //包数据的内容长度-不包括此包结构和包头尾 :26-29
-	int32_t reserve;        //包数据保留字段-暂时不使用               :30-33
+	size_t type;           //包数据的类型                            :22-25
+	size_t datalen;        //包数据的内容长度-不包括此包结构和包头尾 :26-29
+	size_t reserve;        //包数据保留字段-暂时不使用               :30-33
 }NetPacket;
 #define NET_PACKAGE_HEADLEN sizeof(NetPacket)//包头长度，为固定大小34字节
 

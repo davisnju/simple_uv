@@ -12,7 +12,7 @@ TCPServer::TCPServer(char packhead, char packtail)
     : packet_head(packhead), packet_tail(packtail)
     , newconcb_(nullptr), newconcb_userdata_(nullptr), closedcb_(nullptr), closedcb_userdata_(nullptr)
     , isclosed_(true), isuseraskforclosed_(false)
-    , startstatus_(START_DIS), protocol_(NULL)
+    , startstatus_(START_DIS)
 {
     int iret = uv_loop_init(&loop_);
     if (iret) {
@@ -486,11 +486,6 @@ bool TCPServer::sendinl(const std::string& senddata, TcpClientCtx* client)
         return false;
     }
     return true;
-}
-
-void TCPServer::SetPortocol(TCPServerProtocolProcess* pro)
-{
-    protocol_ = pro;
 }
 
 int TCPServer::ParsePacket( const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient)

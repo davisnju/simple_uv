@@ -19,7 +19,7 @@ namespace uv
 	typedef struct _write_param { //the param of uv_write
 		uv_write_t write_req_;
 		uv_buf_t buf_;
-		int buf_truelen_;
+		size_t buf_truelen_;
 	} write_param;
 	write_param* AllocWriteParam(void);
 	void FreeWriteParam(write_param* param);

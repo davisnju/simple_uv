@@ -3,24 +3,6 @@
 #include <string>
 #include "tcpserver.h"
 #include "DumpFile.h"
-class TestTCPProtocol: public TCPServerProtocolProcess
-{
-public:
-	TestTCPProtocol(){}
-	virtual ~TestTCPProtocol(){}
-	virtual const std::string& ParsePacket(const NetPacket& packet, const unsigned char* buf){
-		static char senddata[256];
-		sprintf(senddata,"****recv datalen %d",packet.datalen);
-		fprintf(stdout,"%s\n",senddata);
-
-		NetPacket tmppack = packet;
-		tmppack.datalen = (std::min)(strlen(senddata),sizeof(senddata)-1);
-		pro_packet_ = PacketData(tmppack,(const unsigned char*)senddata);
-		return pro_packet_;
-	}
-private:
-	std::string pro_packet_;
-};
 
 using namespace std;
 using namespace uv;
@@ -44,11 +26,9 @@ void NewConnect(int clientid, void* userdata)
 
 int main(int argc, char** argv)
 {
-	TestTCPProtocol protocol;
 	DeclareDumpFile();
 	TCPServer::StartLog("log/");
 	server.SetNewConnectCB(NewConnect,&server);
-	server.SetPortocol(&protocol);
 	if(!server.Start("0.0.0.0",12345)) {
 		fprintf(stdout,"Start Server error:%s\n",server.GetLastErrMsg());
 	}

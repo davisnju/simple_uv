@@ -74,40 +74,40 @@ namespace uv
 	Stop the log fun(optional) : StopLog
 	GetLastErrMsg(optional)    : when the above fun call failure, call this fun to get the error message.
 	*************************************************/
-	class SUV_EXPORT TCPClient
+	class TCPClient
 	{
 	public:
-		TCPClient(char packhead, char packtail);
-		virtual ~TCPClient();
+		SUV_EXPORT TCPClient(char packhead, char packtail);
+		virtual SUV_EXPORT ~TCPClient();
 		//Start/Stop the log
-		static void StartLog(const char* logpath = nullptr);
-		static void StopLog();
+		static SUV_EXPORT void StartLog(const char* logpath = nullptr);
+		static SUV_EXPORT void StopLog();
 	public:
-		void SetRecvCB(ClientRecvCB pfun, void* userdata);//set recv cb
-		void SetClosedCB(TcpCloseCB pfun, void* userdata);//set close cb.
-		void SetReconnectCB(ReconnectCB pfun, void* userdata);//set reconnect cb
-		bool Connect(const char* ip, int port);//connect the server, ipv4
-		bool Connect6(const char* ip, int port);//connect the server, ipv6
-		int  Send(const char* data, std::size_t len);//send data to server
-		void Close();//send close command. verify IsClosed for real closed
-		bool IsClosed() {//verify if real closed
+		void SUV_EXPORT SetRecvCB(ClientRecvCB pfun, void* userdata);//set recv cb
+		void SUV_EXPORT SetClosedCB(TcpCloseCB pfun, void* userdata);//set close cb.
+		void SUV_EXPORT SetReconnectCB(ReconnectCB pfun, void* userdata);//set reconnect cb
+		bool SUV_EXPORT Connect(const char* ip, int port);//connect the server, ipv4
+		bool SUV_EXPORT Connect6(const char* ip, int port);//connect the server, ipv6
+		int  SUV_EXPORT Send(const char* data, std::size_t len);//send data to server
+		void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
+		bool SUV_EXPORT IsClosed() {//verify if real closed
 			return isclosed_;
 		};
 		//Enable or disable Nagle’s algorithm. must call after Server succeed start.
-		bool SetNoDelay(bool enable);
+		bool SUV_EXPORT SetNoDelay(bool enable);
 
 		//Enable or disable KeepAlive. must call after Server succeed start.
 		//delay is the initial delay in seconds, ignored when enable is zero
-		bool SetKeepAlive(int enable, unsigned int delay);
+		bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
 
-		const char* GetLastErrMsg() const {
+		const SUV_EXPORT char* GetLastErrMsg() const {
 			return errmsg_.c_str();
 		};
 	protected:
-		bool init();
+		bool SUV_EXPORT init();
 		void closeinl();//real close fun
 		bool run(int status = UV_RUN_DEFAULT);
-		void send_inl(uv_write_t* req = NULL);//real send data fun
+		void SUV_EXPORT send_inl(uv_write_t* req = NULL);//real send data fun
 		static void ConnectThread(void* arg);//connect thread,run until use close the client
 
 		static void AfterConnect(uv_connect_t* handle, int status);

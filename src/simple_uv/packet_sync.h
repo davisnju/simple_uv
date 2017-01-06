@@ -67,8 +67,8 @@ public:
     }
 
 public:
-    void recvdata(const unsigned char* data, int len) { //接收到数据，把数据保存在circulebuffer_
-        int iret = 0;
+    void recvdata(const unsigned char* data, size_t len) { //接收到数据，把数据保存在circulebuffer_
+        size_t iret = 0;
         while (iret < len || truepacketlen >= NET_PACKAGE_HEADLEN + 2) {
             if (PARSE_NOTHING == parsetype) {//未解析出head
                 if (thread_readdata.len - truepacketlen >= len - iret) {
@@ -210,11 +210,11 @@ private:
         PARSE_HEAD,
         PARSE_NOTHING,
     };
-    int parsetype;
-    int getdatalen;
+    size_t parsetype;
+    size_t getdatalen;
     uv_buf_t  thread_readdata;//负责从circulebuffer_读取数据
     uv_buf_t  thread_packetdata;//负责从circulebuffer_读取packet 中data部分
-    int truepacketlen;//readdata有效数据长度
+    size_t truepacketlen;//readdata有效数据长度
     int headpos;//找到头位置
     char* headpt;//找到头位置
     unsigned char HEAD;//包头

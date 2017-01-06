@@ -92,7 +92,6 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tcpclient.h" />
     <ClInclude Include="tcpserver.h" />
-    <ClInclude Include="tcpserverprotocolprocess.h" />
     <ClInclude Include="thread_uv.h" />
     <ClInclude Include="uv_msg_framing.h" />
   </ItemGroup>

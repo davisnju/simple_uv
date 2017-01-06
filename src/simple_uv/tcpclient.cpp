@@ -472,7 +472,7 @@ bool TCPClient::StartReconnect(void)
 {
     isreconnecting_ = true;
     client_handle_->tcphandle.data = this;
-    repeat_time_ = 1e3;//1 sec
+    repeat_time_ = 1000;//1 sec
     return true;
 }
 
@@ -480,7 +480,7 @@ void TCPClient::StopReconnect(void)
 {
     isreconnecting_ = false;
     client_handle_->tcphandle.data = client_handle_;
-    repeat_time_ = 1e3;//1 sec
+    repeat_time_ = 1000;//1 sec
     uv_timer_stop(&reconnect_timer_);
 }
 

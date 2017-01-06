@@ -36,7 +36,6 @@ AcceptClient也同样进行改进.AcceptClient不需要Close,直接close_inl就�
 #include <vector>
 #include "uv.h"
 #include "packet_sync.h"
-#include "tcpserverprotocolprocess.h"
 #include "simple_uv_export.h"
 #include "BaseMsgDefine.h"
 #ifndef BUFFER_SIZE
@@ -80,42 +79,41 @@ namespace uv
 	Stop the log fun(optional) : StopLog
 	GetLastErrMsg(optional)    : when the above fun call failure, call this fun to get the error message.
 	*************************************************/
-	class SUV_EXPORT TCPServer
+	class TCPServer
 	{
 	public:
-		TCPServer(char packhead, char packtail);
-		virtual ~TCPServer();
+		SUV_EXPORT TCPServer(char packhead, char packtail);
+		virtual SUV_EXPORT ~TCPServer();
 		//Start/Stop the log
-		static void StartLog(const char* logpath = nullptr);
-		static void StopLog();
-	public:
-		void SetNewConnectCB(NewConnectCB cb, void* userdata);//set new connect cb.
-		void SetRecvCB(int clientid, ServerRecvCB cb, void* userdata); //set recv cb. call for each accept client.
-		void SetClosedCB(TcpCloseCB pfun, void* userdata);//set close cb.
-		void SetPortocol(TCPServerProtocolProcess *pro);
+		static void SUV_EXPORT StartLog(const char* logpath = nullptr);
+		static void SUV_EXPORT StopLog();
 
-		bool Start(const char* ip, int port);//Start the server, ipv4
-		bool Start6(const char* ip, int port);//Start the server, ipv6
-		void Close();//send close command. verify IsClosed for real closed
-		bool IsClosed() {//verify if real closed
+		void SUV_EXPORT SetNewConnectCB(NewConnectCB cb, void* userdata);//set new connect cb.
+		void SUV_EXPORT SetRecvCB(int clientid, ServerRecvCB cb, void* userdata); //set recv cb. call for each accept client.
+		void SUV_EXPORT SetClosedCB(TcpCloseCB pfun, void* userdata);//set close cb.
+
+		bool SUV_EXPORT Start(const char* ip, int port);//Start the server, ipv4
+		bool SUV_EXPORT Start6(const char* ip, int port);//Start the server, ipv6
+		void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
+		bool SUV_EXPORT IsClosed() {//verify if real closed
 			return isclosed_;
 		};
 
 		//Enable or disable Nagle’s algorithm. must call after Server succeed start.
-		bool SetNoDelay(bool enable);
+		bool SUV_EXPORT SetNoDelay(bool enable);
 
 		//Enable or disable KeepAlive. must call after Server succeed start.
 		//delay is the initial delay in seconds, ignored when enable is zero
-		bool SetKeepAlive(int enable, unsigned int delay);
+		bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
 
-		const char* GetLastErrMsg() const {
+		const SUV_EXPORT char* GetLastErrMsg() const {
 			return errmsg_.c_str();
 		};
 
 	protected:
-		int GetAvailaClientID()const;
-		virtual int ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
-		virtual int SendPacket(TcpClientCtx *pClient, const char *pData, size_t nSize);
+		int SUV_EXPORT GetAvailaClientID()const;
+		virtual int SUV_EXPORT ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
+		virtual int SUV_EXPORT SendPacket(TcpClientCtx *pClient, const char *pData, size_t nSize);
 		//Static callback function
 		static void AfterServerClose(uv_handle_t* handle);
 		static void DeleteTcpHandle(uv_handle_t* handle);//delete handle after close client
@@ -149,8 +147,6 @@ namespace uv
 
 		std::map<int, AcceptClient*> clients_list_; //clients map
 		uv_mutex_t mutex_clients_;//clients map mutex
-
-		TCPServerProtocolProcess* protocol_;//protocol
 
 		uv_thread_t start_threadhandle_;//start thread handle
 		static void StartThread(void* arg);//start thread,run until use close the server
