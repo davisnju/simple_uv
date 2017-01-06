@@ -38,6 +38,7 @@ AcceptClient也同样进行改进.AcceptClient不需要Close,直接close_inl就�
 #include "packet_sync.h"
 #include "simple_uv_export.h"
 #include "BaseMsgDefine.h"
+#include "TcpHandle.h"
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE (1024*10)
 #endif
@@ -46,40 +47,8 @@ namespace uv
 {
 	/***************************************************************Server*******************************************************************************/
 	class AcceptClient;
-	/*typedef struct _tcpclient_ctx {
-		uv_tcp_t tcphandle;//data filed store this
-		PacketSync* packet_;//userdata filed storethis
-		uv_buf_t read_buf_;
-		int clientid;
-		void* parent_server;//tcpserver
-		void* parent_acceptclient;//accept client
-	} TcpClientCtx;
-	TcpClientCtx* AllocTcpClientCtx(void* parentserver);
-	void FreeTcpClientCtx(TcpClientCtx* ctx);
-
-	typedef struct _write_param { //the param of uv_write
-		uv_write_t write_req_;
-		uv_buf_t buf_;
-		int buf_truelen_;
-	} write_param;
-	write_param* AllocWriteParam(void);
-	void FreeWriteParam(write_param* param);*/
-
-	/*************************************************
-	Fun：TCP Server
-	Usage：
-	Start the log fun(optional): StartLog
-	Set the call back fun      : SetNewConnectCB/SetRecvCB/SetClosedCB
-	SetPortocol                : SetPortocol. The send&recv data fun all in TCPServerProtocolProcess. user must inherit it and implement the method you need. 
-	Start Server               : Start/Start6
-	SetNoDelay(optional)       : SetNoDelay
-	SetKeepAlive(optional)     : SetKeepAlive
-	Close Server               : Close. this fun only set the close command, call IsClosed to verify real closed.
-	or verify in the call back fun which SetRecvCB set.
-	Stop the log fun(optional) : StopLog
-	GetLastErrMsg(optional)    : when the above fun call failure, call this fun to get the error message.
-	*************************************************/
-	class TCPServer
+	
+	class TCPServer : public CTcpHandle
 	{
 	public:
 		SUV_EXPORT TCPServer(char packhead, char packtail);
@@ -95,9 +64,6 @@ namespace uv
 		bool SUV_EXPORT Start(const char* ip, int port);//Start the server, ipv4
 		bool SUV_EXPORT Start6(const char* ip, int port);//Start the server, ipv6
 		void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
-		bool SUV_EXPORT IsClosed() {//verify if real closed
-			return isclosed_;
-		};
 
 		//Enable or disable Nagle’s algorithm. must call after Server succeed start.
 		bool SUV_EXPORT SetNoDelay(bool enable);
@@ -106,9 +72,6 @@ namespace uv
 		//delay is the initial delay in seconds, ignored when enable is zero
 		bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
 
-		const SUV_EXPORT char* GetLastErrMsg() const {
-			return errmsg_.c_str();
-		};
 
 	protected:
 		int SUV_EXPORT GetAvailaClientID()const;
@@ -124,12 +87,7 @@ namespace uv
 		static void CloseWalkCB(uv_handle_t* handle, void* arg);//close all handle in loop
 
 	private:
-		enum {
-			START_TIMEOUT,
-			START_FINISH,
-			START_ERROR,
-			START_DIS,
-		};
+		
 
 		bool init();
 		void closeinl();//real close fun
@@ -139,14 +97,14 @@ namespace uv
 		bool listen(int backlog = SOMAXCONN);
 		bool sendinl(const std::string& senddata, TcpClientCtx* client);
 		bool broadcast(const std::string& senddata, std::vector<int> excludeid);//broadcast to all clients, except the client who's id in excludeid
-		uv_loop_t loop_;
-		uv_tcp_t tcp_handle_;
-		uv_async_t async_handle_close_;
-		bool isclosed_;
-		bool isuseraskforclosed_;
+		// uv_loop_t loop_;
+		// uv_tcp_t tcp_handle_;
+// 		uv_async_t async_handle_close_;
+// 		bool isclosed_;
+// 		bool isuseraskforclosed_;
 
 		std::map<int, AcceptClient*> clients_list_; //clients map
-		uv_mutex_t mutex_clients_;//clients map mutex
+		// uv_mutex_t mutex_clients_;//clients map mutex
 
 		uv_thread_t start_threadhandle_;//start thread handle
 		static void StartThread(void* arg);//start thread,run until use close the server

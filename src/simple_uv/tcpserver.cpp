@@ -11,19 +11,9 @@ namespace uv
 TCPServer::TCPServer(char packhead, char packtail)
     : packet_head(packhead), packet_tail(packtail)
     , newconcb_(nullptr), newconcb_userdata_(nullptr), closedcb_(nullptr), closedcb_userdata_(nullptr)
-    , isclosed_(true), isuseraskforclosed_(false)
-    , startstatus_(START_DIS)
+    , startstatus_(CONNECT_DIS)
 {
-    int iret = uv_loop_init(&loop_);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-        fprintf(stdout, "init loop error: %s\n", errmsg_.c_str());
-    }
-    iret = uv_mutex_init(&mutex_clients_);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-        fprintf(stdout, "uv_mutex_init error: %s\n", errmsg_.c_str());
-    }
+   
 }
 
 
@@ -31,8 +21,7 @@ TCPServer::~TCPServer()
 {
     Close();
     uv_thread_join(&start_threadhandle_);
-    uv_mutex_destroy(&mutex_clients_);
-    uv_loop_close(&loop_);
+    
     for (auto it = avai_tcphandle_.begin(); it != avai_tcphandle_.end(); ++it) {
         FreeTcpClientCtx(*it);
     }
@@ -47,32 +36,8 @@ TCPServer::~TCPServer()
 
 bool TCPServer::init()
 {
-    if (!isclosed_) {
-        return true;
-    }
-    int iret = uv_async_init(&loop_, &async_handle_close_, AsyncCloseCB);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-//        // LOGE(errmsg_);
-        return false;
-    }
-    async_handle_close_.data = this;
-
-    iret = uv_tcp_init(&loop_, &tcp_handle_);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-//        // LOGE(errmsg_);
-        return false;
-    }
-    tcp_handle_.data = this;
-    iret = uv_tcp_nodelay(&tcp_handle_,  1);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-//        // LOGE(errmsg_);
-        return false;
-    }
-    isclosed_ = false;
-    return true;
+	CTcpHandle::init();
+	return uv_tcp_nodelay(&tcp_handle_,  1) == 0;
 }
 
 void TCPServer::closeinl()
@@ -197,14 +162,14 @@ bool TCPServer::Start(const char* ip, int port)
         return false;
     }
     int wait_count = 0;
-    while (startstatus_ == START_DIS) {
+    while (startstatus_ == CONNECT_DIS) {
         ThreadSleep(100);
         if (++wait_count > 100) {
-            startstatus_ = START_TIMEOUT;
+            startstatus_ = CONNECT_TIMEOUT;
             break;
         }
     }
-    return startstatus_ == START_FINISH;
+    return startstatus_ == CONNECT_FINISH;
 }
 
 bool TCPServer::Start6(const char* ip, int port)
@@ -228,20 +193,20 @@ bool TCPServer::Start6(const char* ip, int port)
         return false;
     }
     int wait_count = 0;
-    while (startstatus_ == START_DIS) {
+    while (startstatus_ == CONNECT_DIS) {
         ThreadSleep(100);
         if (++wait_count > 100) {
-            startstatus_ = START_TIMEOUT;
+            startstatus_ = CONNECT_TIMEOUT;
             break;
         }
     }
-    return startstatus_ == START_FINISH;
+    return startstatus_ == CONNECT_FINISH;
 }
 
 void TCPServer::StartThread(void* arg)
 {
     TCPServer* theclass = (TCPServer*)arg;
-    theclass->startstatus_ = START_FINISH;
+    theclass->startstatus_ = CONNECT_FINISH;
     theclass->run();
     //the server is close when come here
     theclass->isclosed_ = true;

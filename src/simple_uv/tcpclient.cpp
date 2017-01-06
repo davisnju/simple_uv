@@ -10,22 +10,10 @@ TCPClient::TCPClient(char packhead, char packtail)
     : PACKET_HEAD(packhead), PACKET_TAIL(packtail)
     , recvcb_(nullptr), recvcb_userdata_(nullptr), closedcb_(nullptr), closedcb_userdata_(nullptr)
     , connectstatus_(CONNECT_DIS), write_circularbuf_(BUFFER_SIZE)
-    , isclosed_(true), isuseraskforclosed_(false)
     , reconnectcb_(nullptr), reconnect_userdata_(nullptr)
     , isIPv6_(false), isreconnecting_(false)
 {
     client_handle_ = AllocTcpClientCtx(this);
-    int iret = uv_loop_init(&loop_);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-        // // LOGI(errmsg_);
-        fprintf(stdout, "init loop error: %s\n", errmsg_.c_str());
-    }
-    iret = uv_mutex_init(&mutex_writebuf_);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-        // // LOGI(errmsg_);
-    }
     connect_req_.data = this;
 }
 
@@ -35,8 +23,6 @@ TCPClient::~TCPClient()
     Close();
     uv_thread_join(&connect_threadhandle_);
     FreeTcpClientCtx(client_handle_);
-    uv_loop_close(&loop_);
-    uv_mutex_destroy(&mutex_writebuf_);
     for (auto it = writeparam_list_.begin(); it != writeparam_list_.end(); ++it) {
         FreeWriteParam(*it);
     }
@@ -47,39 +33,27 @@ TCPClient::~TCPClient()
 
 bool TCPClient::init()
 {
-    if (!isclosed_) {
-        return true;
-    }
-    int iret = uv_async_init(&loop_, &async_handle_, AsyncCB);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-        // // LOGI(errmsg_);
-        return false;
-    }
-    async_handle_.data = this;
+	if (CTcpHandle::init())
+	{
+		client_handle_->tcphandle = this->tcp_handle_;
+		client_handle_->tcphandle.data = client_handle_;
+		client_handle_->parent_server = this;
 
-    iret = uv_tcp_init(&loop_, &client_handle_->tcphandle);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-        // // LOGI(errmsg_);
-        return false;
-    }
-    client_handle_->tcphandle.data = client_handle_;
-    client_handle_->parent_server = this;
+		client_handle_->packet_->SetPacketCB(GetPacket, client_handle_);
+		client_handle_->packet_->Start(PACKET_HEAD, PACKET_TAIL);
 
-    client_handle_->packet_->SetPacketCB(GetPacket, client_handle_);
-    client_handle_->packet_->Start(PACKET_HEAD, PACKET_TAIL);
+		int iret = uv_timer_init(&loop_, &reconnect_timer_);
+		if (iret) {
+			errmsg_ = GetUVError(iret);
+			// // LOGI(errmsg_);
+			return false;
+		}
+		reconnect_timer_.data = this;
 
-    iret = uv_timer_init(&loop_, &reconnect_timer_);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-        // // LOGI(errmsg_);
-        return false;
-    }
-    reconnect_timer_.data = this;
-    // LOGI("client(" << this << ")Init");
-    isclosed_ = false;
-    return true;
+		return true;
+	}
+
+	return false;
 }
 
 void TCPClient::closeinl()

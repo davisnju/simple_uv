@@ -34,47 +34,14 @@ BUFFER_SIZE由1M改为10K，一个client需要6倍BUFFER_SIZE.一个client内部
 #include "pod_circularbuffer.h"
 #include "BaseMsgDefine.h"
 #include "simple_uv_export.h"
+#include "TcpHandle.h"
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE (1024*10)
 #endif
 
 namespace uv
 {
-	/**********************************************Client****************************************************/
-	/*typedef struct _tcpclient_ctx {
-		uv_tcp_t tcphandle;//store this on data
-		uv_write_t write_req;//store this on data
-		PacketSync* packet_;//store this on userdata
-		uv_buf_t read_buf_;
-		int clientid;
-		void* parent_server;//store TCPClient point
-	} TcpClientCtx;
-	TcpClientCtx* AllocTcpClientCtx(void* parentserver);
-	void FreeTcpClientCtx(TcpClientCtx* ctx);
-
-	typedef struct _write_param{//param of uv_write
-		uv_write_t write_req_;//store TCPClient on data
-		uv_buf_t buf_;
-		int buf_truelen_;
-	}write_param;
-	write_param * AllocWriteParam(void);
-	void FreeWriteParam(write_param* param);*/
-
-	/*************************************************
-	Fun: TCP Client
-	Usage：
-	Start the log fun(optional): StartLog
-	Set the call back fun      : SetRecvCB/SetClosedCB/SetReconnectCB
-	Connect Server             : Connect/Connect6
-	SetNoDelay(optional)       : SetNoDelay
-	SetKeepAlive(optional)     : SetKeepAlive
-	Send data                  : Send
-	Close Server               : Close. this fun only set the close command, call IsClosed to verify real closed.
-	or verify in the call back fun which SetRecvCB set.
-	Stop the log fun(optional) : StopLog
-	GetLastErrMsg(optional)    : when the above fun call failure, call this fun to get the error message.
-	*************************************************/
-	class TCPClient
+	class TCPClient : public CTcpHandle
 	{
 	public:
 		SUV_EXPORT TCPClient(char packhead, char packtail);
@@ -90,9 +57,7 @@ namespace uv
 		bool SUV_EXPORT Connect6(const char* ip, int port);//connect the server, ipv6
 		int  SUV_EXPORT Send(const char* data, std::size_t len);//send data to server
 		void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
-		bool SUV_EXPORT IsClosed() {//verify if real closed
-			return isclosed_;
-		};
+		
 		//Enable or disable Nagle’s algorithm. must call after Server succeed start.
 		bool SUV_EXPORT SetNoDelay(bool enable);
 
@@ -100,9 +65,7 @@ namespace uv
 		//delay is the initial delay in seconds, ignored when enable is zero
 		bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
 
-		const SUV_EXPORT char* GetLastErrMsg() const {
-			return errmsg_.c_str();
-		};
+		
 	protected:
 		bool SUV_EXPORT init();
 		void closeinl();//real close fun
@@ -121,17 +84,10 @@ namespace uv
 		static void ReconnectTimer(uv_timer_t* handle);
 
 	private:
-		enum {
-			CONNECT_TIMEOUT,
-			CONNECT_FINISH,
-			CONNECT_ERROR,
-			CONNECT_DIS,
-		};
 		TcpClientCtx *client_handle_;
 		uv_async_t async_handle_;
-		uv_loop_t loop_;
-		bool isclosed_;
-		bool isuseraskforclosed_;
+		// uv_loop_t loop_;
+		// bool isuseraskforclosed_;
 
 		uv_thread_t connect_threadhandle_;
 		uv_connect_t connect_req_;
