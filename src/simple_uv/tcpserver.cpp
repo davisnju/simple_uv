@@ -8,10 +8,8 @@
 namespace uv
 {
 /*****************************************TCP Server*************************************************************/
-TCPServer::TCPServer(char packhead, char packtail)
-    : CTcpHandle(packhead, packtail)
-    , newconcb_(nullptr), newconcb_userdata_(nullptr), closedcb_(nullptr), closedcb_userdata_(nullptr)
-    , startstatus_(CONNECT_DIS)
+TCPServer::TCPServer()
+    : startstatus_(CONNECT_DIS)
 {
    
 }
@@ -47,7 +45,7 @@ void TCPServer::closeinl()
     }
 
     uv_mutex_lock(&mutex_clients_);
-    for (auto it = clients_list_.begin(); it != clients_list_.end(); ++it) {
+    for (auto it = m_mapClientsList.begin(); it != m_mapClientsList.end(); ++it) {
         auto data = it->second;
         data->Close();
     }
@@ -212,9 +210,10 @@ void TCPServer::StartThread(void* arg)
     theclass->isclosed_ = true;
     theclass->isuseraskforclosed_ = false;
 //    // LOGI("server  had closed.");
-    if (theclass->closedcb_) {//trigger the close cb
-        theclass->closedcb_(-1, theclass->closedcb_userdata_);
-    }
+//     if (theclass->closedcb_) {//trigger the close cb
+//         theclass->closedcb_(-1, theclass->closedcb_userdata_);
+//     }
+	theclass->CloseCB(-1);
 }
 
 void TCPServer::AcceptConnection(uv_stream_t* server, int status)
@@ -264,37 +263,24 @@ void TCPServer::AcceptConnection(uv_stream_t* server, int status)
     AcceptClient* cdata = new AcceptClient(tmptcp, clientid, tcpsock->packet_head, tcpsock->packet_tail, &tcpsock->loop_); //delete on SubClientClosed
     cdata->SetClosedCB(TCPServer::SubClientClosed, tcpsock);
     uv_mutex_lock(&tcpsock->mutex_clients_);
-    tcpsock->clients_list_.insert(std::make_pair(clientid, cdata)); //add accept client
+    tcpsock->m_mapClientsList.insert(std::make_pair(clientid, cdata)); //add accept client
     uv_mutex_unlock(&tcpsock->mutex_clients_);
 
-    if (tcpsock->newconcb_) {
-        tcpsock->newconcb_(clientid, tcpsock->newconcb_userdata_);
-    }
+	tcpsock->NewConnect(clientid);
     // LOGI("new client id=" << clientid);
     return;
 }
 
 void TCPServer::SetRecvCB(int clientid, ServerRecvCB cb, void* userdata)
 {
-    uv_mutex_lock(&mutex_clients_);
-    auto itfind = clients_list_.find(clientid);
-    if (itfind != clients_list_.end()) {
-        itfind->second->SetRecvCB(cb, userdata);
-    }
-    uv_mutex_unlock(&mutex_clients_);
+//     uv_mutex_lock(&mutex_clients_);
+//     auto itfind = m_mapClientsList.find(clientid);
+//     if (itfind != m_mapClientsList.end()) {
+//         itfind->second->SetRecvCB(cb, userdata);
+//     }
+//     uv_mutex_unlock(&mutex_clients_);
 }
 
-void TCPServer::SetNewConnectCB(NewConnectCB cb, void* userdata)
-{
-    newconcb_ = cb;
-    newconcb_userdata_ = userdata;
-}
-
-void TCPServer::SetClosedCB(TcpCloseCB pfun, void* userdata)
-{
-    closedcb_ = pfun;
-    closedcb_userdata_ = userdata;
-}
 
 /* Fully close a loop */
 void TCPServer::CloseWalkCB(uv_handle_t* handle, void* arg)
@@ -336,6 +322,17 @@ int TCPServer::GetAvailaClientID() const
     return ++s_id;
 }
 
+void TCPServer::NewConnect(int clientid)
+{
+	fprintf(stdout, "new connect:%d\n", clientid);
+	this->SetRecvCB(clientid, NULL, NULL);
+}
+
+void TCPServer::CloseCB(int clientid)
+{
+	fprintf(stdout, "cliend %d close\n", clientid);
+}
+
 void TCPServer::StartLog(const char* logpath /*= nullptr*/)
 {
     /*zsummer::log4z::ILog4zManager::GetInstance()->SetLoggerMonthdir(LOG4Z_MAIN_LOGGER_ID, true);
@@ -357,11 +354,9 @@ void TCPServer::SubClientClosed(int clientid, void* userdata)
 {
     TCPServer* theclass = (TCPServer*)userdata;
     uv_mutex_lock(&theclass->mutex_clients_);
-    auto itfind = theclass->clients_list_.find(clientid);
-    if (itfind != theclass->clients_list_.end()) {
-        if (theclass->closedcb_) {
-            theclass->closedcb_(clientid, theclass->closedcb_userdata_);
-        }
+    auto itfind = theclass->m_mapClientsList.find(clientid);
+    if (itfind != theclass->m_mapClientsList.end()) {
+		theclass->CloseCB(clientid);
         if (theclass->avai_tcphandle_.size() > MAXLISTSIZE) {
             FreeTcpClientCtx(itfind->second->GetTcpHandle());
         } else {
@@ -370,7 +365,7 @@ void TCPServer::SubClientClosed(int clientid, void* userdata)
         delete itfind->second;
         // LOGI("delete client:" << itfind->first);
         fprintf(stdout, "delete client：%d\n", itfind->first);
-        theclass->clients_list_.erase(itfind);
+        theclass->m_mapClientsList.erase(itfind);
     }
     uv_mutex_unlock(&theclass->mutex_clients_);
 }
@@ -403,12 +398,12 @@ bool TCPServer::broadcast(const std::string& senddata, std::vector<int> excludei
     AcceptClient* pClient = NULL;
     write_param* writep = NULL;
     if (excludeid.empty()) {
-        for (auto it = clients_list_.begin(); it != clients_list_.end(); ++it) {
+        for (auto it = m_mapClientsList.begin(); it != m_mapClientsList.end(); ++it) {
             pClient = it->second;
             sendinl(senddata, pClient->GetTcpHandle());
         }
     } else {
-        for (auto it = clients_list_.begin(); it != clients_list_.end(); ++it) {
+        for (auto it = m_mapClientsList.begin(); it != m_mapClientsList.end(); ++it) {
             auto itfind = std::find(excludeid.begin(), excludeid.end(), it->first);
             if (itfind != excludeid.end()) {
                 excludeid.erase(itfind);
@@ -475,7 +470,8 @@ AcceptClient::AcceptClient(TcpClientCtx* control,  int clientid, char packhead, 
     : client_handle_(control)
     , client_id_(clientid), loop_(loop)
     , isclosed_(true)
-    , recvcb_(nullptr), recvcb_userdata_(nullptr), closedcb_(nullptr), closedcb_userdata_(nullptr)
+    // , recvcb_(nullptr), recvcb_userdata_(nullptr)
+	, closedcb_(nullptr), closedcb_userdata_(nullptr)
 {
     init(packhead, packtail);
 }
@@ -524,12 +520,6 @@ void AcceptClient::AfterClientClose(uv_handle_t* handle)
     }
 }
 
-void AcceptClient::SetRecvCB(ServerRecvCB pfun, void* userdata)
-{
-    //GetPacket trigger this cb
-    recvcb_ = pfun;
-    recvcb_userdata_ = userdata;
-}
 
 void AcceptClient::SetClosedCB(TcpCloseCB pfun, void* userdata)
 {
@@ -563,7 +553,7 @@ void AfterRecv(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
             fprintf(stdout, "client(%d)conn reset\n", theclass->clientid);
             // LOGI(("client(" << theclass->clientid << ")conn reset");
         } else {
-            fprintf(stdout, "%s\n", GetUVError(nread));
+            fprintf(stdout, "%s\n", GetUVError(nread).c_str());
             // LOGI(("client(" << theclass->clientid << ")：" << GetUVError(nread));
         }
         AcceptClient* acceptclient = (AcceptClient*)theclass->parent_acceptclient;

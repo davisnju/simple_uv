@@ -51,16 +51,14 @@ namespace uv
 	class TCPServer : public CTcpHandle
 	{
 	public:
-		SUV_EXPORT TCPServer(char packhead, char packtail);
+		SUV_EXPORT TCPServer();
 		virtual SUV_EXPORT ~TCPServer();
 		//Start/Stop the log
 		static void SUV_EXPORT StartLog(const char* logpath = nullptr);
 		static void SUV_EXPORT StopLog();
 
-		void SUV_EXPORT SetNewConnectCB(NewConnectCB cb, void* userdata);//set new connect cb.
 		void SUV_EXPORT SetRecvCB(int clientid, ServerRecvCB cb, void* userdata); //set recv cb. call for each accept client.
-		void SUV_EXPORT SetClosedCB(TcpCloseCB pfun, void* userdata);//set close cb.
-
+		
 		bool SUV_EXPORT Start(const char* ip, int port);//Start the server, ipv4
 		bool SUV_EXPORT Start6(const char* ip, int port);//Start the server, ipv6
 		void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
@@ -76,6 +74,8 @@ namespace uv
 
 	protected:
 		int SUV_EXPORT GetAvailaClientID()const;
+		void NewConnect(int clientid);
+		void CloseCB(int clientid);
 		// virtual int SUV_EXPORT SendUvMessage(TcpClientCtx *pClient, const char *pData, size_t nSize);
 		template<class TYPE>
 		int SendUvMessage(const TYPE& msg, size_t nMsgType, TcpClientCtx *pClient);
@@ -91,13 +91,13 @@ namespace uv
 	private:
 		
 
-		bool init();
-		void closeinl();//real close fun
+		bool SUV_EXPORT init();
+		void SUV_EXPORT closeinl();//real close fun
 		// bool run(int status = UV_RUN_DEFAULT);
 		bool bind(const char* ip, int port);
 		bool bind6(const char* ip, int port);
 		bool listen(int backlog = SOMAXCONN);
-		bool sendinl(const std::string& senddata, TcpClientCtx* client);
+		bool SUV_EXPORT sendinl(const std::string& senddata, TcpClientCtx* client);
 		bool broadcast(const std::string& senddata, std::vector<int> excludeid);//broadcast to all clients, except the client who's id in excludeid
 		// uv_loop_t loop_;
 		// uv_tcp_t tcp_handle_;
@@ -105,7 +105,7 @@ namespace uv
 // 		bool isclosed_;
 // 		bool isuseraskforclosed_;
 
-		std::map<int, AcceptClient*> clients_list_; //clients map
+		std::map<int, AcceptClient*> m_mapClientsList; //clients map
 		// uv_mutex_t mutex_clients_;//clients map mutex
 
 		uv_thread_t start_threadhandle_;//start thread handle
@@ -113,13 +113,7 @@ namespace uv
 		int startstatus_;
 
 		// std::string errmsg_;
-
-		NewConnectCB newconcb_;
-		void* newconcb_userdata_;
-
-		TcpCloseCB closedcb_;
-		void* closedcb_userdata_;
-
+		
 		std::string serverip_;
 		int serverport_;
 
@@ -158,7 +152,7 @@ namespace uv
 		AcceptClient(TcpClientCtx* control, int clientid, char packhead, char packtail, uv_loop_t* loop);
 		virtual ~AcceptClient();
 
-		void SetRecvCB(ServerRecvCB pfun, void* userdata);//set recv cb
+		// void SetRecvCB(ServerRecvCB pfun, void* userdata);//set recv cb
 		void SetClosedCB(TcpCloseCB pfun, void* userdata);//set close cb.
 		TcpClientCtx* GetTcpHandle(void) const;
 
@@ -177,8 +171,8 @@ namespace uv
 		bool isclosed_;
 		std::string errmsg_;
 
-		ServerRecvCB recvcb_;
-		void* recvcb_userdata_;
+		// ServerRecvCB recvcb_;
+		// void* recvcb_userdata_;
 
 		TcpCloseCB closedcb_;
 		void* closedcb_userdata_;

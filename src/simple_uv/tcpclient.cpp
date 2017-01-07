@@ -6,10 +6,8 @@
 namespace uv
 {
 /*****************************************TCP Client*************************************************************/
-TCPClient::TCPClient(char packhead, char packtail)
-    : CTcpHandle(packhead, packtail)
-	, closedcb_(nullptr), closedcb_userdata_(nullptr)
-    , connectstatus_(CONNECT_DIS), write_circularbuf_(BUFFER_SIZE)
+TCPClient::TCPClient()
+    : connectstatus_(CONNECT_DIS), write_circularbuf_(BUFFER_SIZE)
     , isIPv6_(false), isreconnecting_(false)
 {
     client_handle_ = AllocTcpClientCtx(this);
@@ -233,11 +231,6 @@ int TCPClient::Send(const char* data, std::size_t len)
     return iret;
 }
 
-void TCPClient::SetClosedCB(TcpCloseCB pfun, void* userdata)
-{
-    closedcb_ = pfun;
-    closedcb_userdata_ = userdata;
-}
 
 void TCPClient::AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
 {
@@ -471,4 +464,10 @@ void TCPClient::ReconnectTimer(uv_timer_t* handle)
     theclass->repeat_time_ *= 2;
     uv_timer_start(handle, TCPClient::ReconnectTimer, theclass->repeat_time_, theclass->repeat_time_);
 }
+
+void TCPClient::CloseCB(int clientid, void* userdata)
+{
+	this->Close();
+}
+
 }

@@ -5,11 +5,11 @@
 #include <assert.h>
 
 
-CTcpHandle::CTcpHandle(char packhead, char packtail)
+CTcpHandle::CTcpHandle()
 	: isclosed_(true)
 	, isuseraskforclosed_(false)
-	, packet_head(packhead)
-	, packet_tail(packtail)
+	, packet_head(SERVER_PACKET_HEAD)
+	, packet_tail(SERVER_PACKET_TAIL)
 {
 	int iret = uv_loop_init(&loop_);
 	if (iret) {

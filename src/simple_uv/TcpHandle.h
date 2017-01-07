@@ -12,10 +12,23 @@ using namespace std;
 #define SERVER_PACKET_HEAD 0x01
 #define SERVER_PACKET_TAIL 0x02
 
+#define BEGIN_UV_BIND virtual int  ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient) \
+	{ \
+
+#define UV_BIND(MSG_TYPE, MSG_CLASS) \
+			if (MSG_TYPE == packet.type) { \
+				MSG_CLASS *msg = (MSG_CLASS *)buf; \
+				return this->OnUvMessage(*msg, pClient); \
+				} \
+
+#define END_UV_BIND(BASE_CLASS) \
+			return BASE_CLASS::ParsePacket(packet, buf, pClient); \
+	} \
+
 class CTcpHandle
 {
 public:
-	CTcpHandle(char packhead, char packtail);
+	CTcpHandle();
 	~CTcpHandle(void);
 
 	virtual void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
@@ -74,7 +87,7 @@ string CTcpHandle::PacketData(const TYPE& msg, size_t nMsgType)
 	tmppack.header = SERVER_PACKET_HEAD;
 	tmppack.tail = SERVER_PACKET_TAIL;
 	tmppack.datalen = sizeof(TYPE);
-	return PacketData2(tmppack, (const unsigned char*)msg);
+	return PacketData2(tmppack, (const unsigned char*)&msg);
 }
 
 void GetPacket(const NetPacket& packethead, const unsigned char* packetdata, void* userdata);

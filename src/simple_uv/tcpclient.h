@@ -44,13 +44,12 @@ namespace uv
 	class TCPClient : public CTcpHandle
 	{
 	public:
-		SUV_EXPORT TCPClient(char packhead, char packtail);
+		SUV_EXPORT TCPClient();
 		virtual SUV_EXPORT ~TCPClient();
 		//Start/Stop the log
 		static SUV_EXPORT void StartLog(const char* logpath = nullptr);
 		static SUV_EXPORT void StopLog();
 	public:
-		void SUV_EXPORT SetClosedCB(TcpCloseCB pfun, void* userdata);//set close cb.
 		bool SUV_EXPORT Connect(const char* ip, int port);//connect the server, ipv4
 		bool SUV_EXPORT Connect6(const char* ip, int port);//connect the server, ipv6
 		int  SUV_EXPORT Send(const char* data, std::size_t len);//send data to server
@@ -70,7 +69,7 @@ namespace uv
 		
 	protected:
 		bool SUV_EXPORT init();
-		void closeinl();//real close fun
+		void SUV_EXPORT closeinl();//real close fun
 		void ReConnectCB(NET_EVENT_TYPE eventtype = NET_EVENT_TYPE_RECONNECT);
 		// bool run(int status = UV_RUN_DEFAULT);
 		void SUV_EXPORT send_inl(uv_write_t* req = NULL);//real send data fun
@@ -84,6 +83,7 @@ namespace uv
 		// static void AsyncCB(uv_async_t* handle);//async close
 		static void CloseWalkCB(uv_handle_t* handle, void* arg);//close all handle in loop
 		static void ReconnectTimer(uv_timer_t* handle);
+		void CloseCB(int clientid, void* userdata);
 
 	private:
 		TcpClientCtx *client_handle_;
@@ -101,10 +101,7 @@ namespace uv
 		std::list<write_param*> writeparam_list_;//Availa write_t
 		PodCircularBuffer<char> write_circularbuf_;//the data prepare to send
 
-
-		TcpCloseCB closedcb_;
-		void* closedcb_userdata_;
-
+		
 		bool StartReconnect(void);
 		void StopReconnect(void);
 		uv_timer_t reconnect_timer_;
