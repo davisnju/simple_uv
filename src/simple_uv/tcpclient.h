@@ -50,26 +50,29 @@ namespace uv
 		static SUV_EXPORT void StartLog(const char* logpath = nullptr);
 		static SUV_EXPORT void StopLog();
 	public:
-		void SUV_EXPORT SetRecvCB(ClientRecvCB pfun, void* userdata);//set recv cb
 		void SUV_EXPORT SetClosedCB(TcpCloseCB pfun, void* userdata);//set close cb.
-		void SUV_EXPORT SetReconnectCB(ReconnectCB pfun, void* userdata);//set reconnect cb
 		bool SUV_EXPORT Connect(const char* ip, int port);//connect the server, ipv4
 		bool SUV_EXPORT Connect6(const char* ip, int port);//connect the server, ipv6
 		int  SUV_EXPORT Send(const char* data, std::size_t len);//send data to server
 		void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
+		virtual int SUV_EXPORT ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
+
+		template<class TYPE>
+		int SendUvMessage(const TYPE& msg, size_t nMsgType);
 		
 		//Enable or disable Nagle’s algorithm. must call after Server succeed start.
-		bool SUV_EXPORT SetNoDelay(bool enable);
+		// bool SUV_EXPORT SetNoDelay(bool enable);
 
 		//Enable or disable KeepAlive. must call after Server succeed start.
 		//delay is the initial delay in seconds, ignored when enable is zero
-		bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
+		// bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
 
 		
 	protected:
 		bool SUV_EXPORT init();
 		void closeinl();//real close fun
-		bool run(int status = UV_RUN_DEFAULT);
+		void ReConnectCB(NET_EVENT_TYPE eventtype = NET_EVENT_TYPE_RECONNECT);
+		// bool run(int status = UV_RUN_DEFAULT);
 		void SUV_EXPORT send_inl(uv_write_t* req = NULL);//real send data fun
 		static void ConnectThread(void* arg);//connect thread,run until use close the client
 
@@ -78,14 +81,13 @@ namespace uv
 		static void AfterSend(uv_write_t* req, int status);
 		static void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
 		static void AfterClientClose(uv_handle_t* handle);
-		static void AsyncCB(uv_async_t* handle);//async close
+		// static void AsyncCB(uv_async_t* handle);//async close
 		static void CloseWalkCB(uv_handle_t* handle, void* arg);//close all handle in loop
-		static void GetPacket(const NetPacket& packethead, const unsigned char* packetdata, void* userdata);
 		static void ReconnectTimer(uv_timer_t* handle);
 
 	private:
 		TcpClientCtx *client_handle_;
-		uv_async_t async_handle_;
+		// uv_async_t async_handle_;
 		// uv_loop_t loop_;
 		// bool isuseraskforclosed_;
 
@@ -95,18 +97,14 @@ namespace uv
 		int connectstatus_;
 
 		//send param
-		uv_mutex_t mutex_writebuf_;//mutex of writebuf_list_
+		// uv_mutex_t mutex_clients_;//mutex of writebuf_list_
 		std::list<write_param*> writeparam_list_;//Availa write_t
 		PodCircularBuffer<char> write_circularbuf_;//the data prepare to send
 
-		ClientRecvCB recvcb_;
-		void* recvcb_userdata_;
 
 		TcpCloseCB closedcb_;
 		void* closedcb_userdata_;
 
-		ReconnectCB reconnectcb_;
-		void* reconnect_userdata_;
 		bool StartReconnect(void);
 		void StopReconnect(void);
 		uv_timer_t reconnect_timer_;
@@ -116,11 +114,18 @@ namespace uv
 		std::string connectip_;
 		int connectport_;
 		bool isIPv6_;
-		std::string errmsg_;
+		// std::string errmsg_;
 
-		char PACKET_HEAD;//protocol head
-		char PACKET_TAIL;//protocol tail
+		// char PACKET_HEAD;//protocol head
+		// char PACKET_TAIL;//protocol tail
 	};
 }
 
 #endif // TCPCLIENT_H
+
+template<class TYPE>
+int uv::TCPClient::SendUvMessage(const TYPE& msg, size_t nMsgType)
+{
+	string str = this->PacketData(msg, nMsgType);
+	return this->Send(&str[0], str.length());
+}

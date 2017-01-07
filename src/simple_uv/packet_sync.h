@@ -233,7 +233,7 @@ private:// no copy
 	       data   --要发送的实际数据
 * @return  std::string --返回的二进制流。地址：&string[0],长度：string.length()
 ******************************/
-inline std::string PacketData(NetPacket& packet, const unsigned char* data)
+inline std::string PacketData2(NetPacket& packet, const unsigned char* data)
 {
     if (packet.datalen == 0 || data == NULL) {//长度为0的md5为：d41d8cd98f00b204e9800998ecf8427e，改为全0
         memset(packet.check, 0, sizeof(packet.check));

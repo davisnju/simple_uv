@@ -9,7 +9,7 @@ namespace uv
 {
 /*****************************************TCP Server*************************************************************/
 TCPServer::TCPServer(char packhead, char packtail)
-    : packet_head(packhead), packet_tail(packtail)
+    : CTcpHandle(packhead, packtail)
     , newconcb_(nullptr), newconcb_userdata_(nullptr), closedcb_(nullptr), closedcb_userdata_(nullptr)
     , startstatus_(CONNECT_DIS)
 {
@@ -54,7 +54,7 @@ void TCPServer::closeinl()
     uv_walk(&loop_, CloseWalkCB, this);//close all handle in loop
 //    // LOGI("close server");
 }
-
+/*
 bool TCPServer::run(int status)
 {
 //    // LOGI("server runing.");
@@ -66,7 +66,7 @@ bool TCPServer::run(int status)
     }
     return true;
 }
-
+/*
 bool TCPServer::SetNoDelay(bool enable)
 {
     int iret = uv_tcp_nodelay(&tcp_handle_, enable ? 1 : 0);
@@ -87,7 +87,7 @@ bool TCPServer::SetKeepAlive(int enable, unsigned int delay)
         return false;
     }
     return true;
-}
+}*/
 
 bool TCPServer::bind(const char* ip, int port)
 {
@@ -390,7 +390,7 @@ void TCPServer::Close()
         return;
     }
     isuseraskforclosed_ = true;
-    uv_async_send(&async_handle_close_);
+    uv_async_send(&async_handle_);
 }
 
 bool TCPServer::broadcast(const std::string& senddata, std::vector<int> excludeid)
@@ -457,18 +457,18 @@ int TCPServer::ParsePacket( const NetPacket& packet, const unsigned char* buf, T
 {
 	char pData[255] = {0};
 	sprintf_s(pData,"****recv datalen %d",packet.datalen);
-	return this->SendPacket(pClient, pData, strlen(pData));
+	return this->SendUvMessage(pData, 4444, pClient);
 }
-
-int TCPServer::SendPacket( TcpClientCtx *pClient, const char *pData, size_t nSize)
-{
-	NetPacket tmppack;
-	tmppack.header = 0x01;
-	tmppack.tail = 0x02;
-	tmppack.datalen = nSize;
-	std::string pro_packet_ = PacketData(tmppack,(const unsigned char*)pData);
-	return this->sendinl(pro_packet_, pClient);
-}
+// 
+// int TCPServer::SendUvMessage( TcpClientCtx *pClient, const char *pData, size_t nSize)
+// {
+// 	NetPacket tmppack;
+// 	tmppack.header = SERVER_PACKET_HEAD;
+// 	tmppack.tail = SERVER_PACKET_TAIL;
+// 	tmppack.datalen = nSize;
+// 	std::string pro_packet_ = PacketData2(tmppack,(const unsigned char*)pData);
+// 	return this->sendinl(pro_packet_, pClient);
+// }
 
 /*****************************************AcceptClient*************************************************************/
 AcceptClient::AcceptClient(TcpClientCtx* control,  int clientid, char packhead, char packtail, uv_loop_t* loop)
@@ -591,17 +591,7 @@ void AfterSend(uv_write_t* req, int status)
     }
 }
 
-void GetPacket(const NetPacket& packethead, const unsigned char* packetdata, void* userdata)
-{
-    fprintf(stdout, "Get control packet type %d\n", packethead.type);
-    assert(userdata);
-    TcpClientCtx* theclass = (TcpClientCtx*)userdata;
-    TCPServer* parent = (TCPServer*)theclass->parent_server;
-    /*const std::string& senddata = parent->protocol_->ParsePacket(packethead, packetdata);
-    parent->sendinl(senddata, theclass);*/
-	parent->ParsePacket(packethead, packetdata, theclass);
-    return;
-}
+
 /*
 TcpClientCtx* AllocTcpClientCtx(void* parentserver)
 {

@@ -9,7 +9,7 @@ using namespace uv;
 bool is_eist = false;
 int call_time = 0;
 
-TCPServer server(0x01,0x02);
+TCPServer server(SERVER_PACKET_HEAD, SERVER_PACKET_TAIL);
 
 void CloseCB(int clientid, void* userdata)
 {

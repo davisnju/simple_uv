@@ -21,46 +21,6 @@ void CloseCB(int clientid, void* userdata)
 	client->Close();
 }
 
-void ReadCB(const NetPacket& packet, const unsigned char* buf, void* userdata)
-{
-	char senddata[256] = {0};
-	TCPClient* client = (TCPClient*)userdata;
-	sprintf(senddata, "****recv server data(%p,%d)", client, packet.datalen);
-	fprintf(stdout, "%s\n", senddata);
-	NetPacket tmppack = packet;
-	tmppack.datalen = (std::min)(strlen(senddata), sizeof(senddata) - 1);
-	std::string retstr = PacketData(tmppack, (const unsigned char*)senddata);
-	if (client->Send(&retstr[0], retstr.length()) <= 0) {
-		fprintf(stdout, "(%p)send error.%s\n", client, client->GetLastErrMsg());
-	}
-	fprintf(stdout, "call time %d\n", ++call_time);
-	//if (call_time > 50) {
-	//    is_exist = true;
-	//}
-}
-void ReConnectCB(NET_EVENT_TYPE eventtype, void* userdata)
-{
-	TCPClient* client = (TCPClient*)userdata;
-	if (NET_EVENT_TYPE_RECONNECT == eventtype) {
-		fprintf(stdout, "succeed reconnect.\n");
-		char senddata[256];
-		memset(senddata, 0, sizeof(senddata));
-		sprintf(senddata, "client(%p) call %d", client, ++call_time);
-		NetPacket packet;
-		packet.header = 0x01;
-		packet.tail = 0x02;
-		packet.datalen = (std::min)(strlen(senddata), sizeof(senddata) - 1);
-		std::string str = PacketData(packet, (const unsigned char*)senddata);
-		if (client->Send(&str[0], str.length()) <= 0) {
-			fprintf(stdout, "(%p)send error.%s\n", client, client->GetLastErrMsg());
-		} else {
-			fprintf(stdout, "send succeed:%s\n", senddata);
-		}
-	} else {
-		fprintf(stdout, "server disconnect.\n");
-	}
-}
-
 int main(int argc, char** argv)
 {
 	if (argc != 3) {
@@ -71,31 +31,30 @@ int main(int argc, char** argv)
 	serverip = argv[1];
 
 	const int clientsize = std::stoi(argv[2]);
-	TCPClient pClients(0x01, 0x02);
+	TCPClient pClients(SERVER_PACKET_HEAD, SERVER_PACKET_TAIL);
 	TCPClient::StartLog("log/");
 
 	int i = 0;
 	char senddata[256];
-	pClients.SetRecvCB(ReadCB, &pClients);
 	pClients.SetClosedCB(CloseCB, &pClients);
-	pClients.SetReconnectCB(ReConnectCB, &pClients);
 	if (!pClients.Connect(serverip.c_str(), 12345)) {
 		fprintf(stdout, "connect error:%s\n", pClients.GetLastErrMsg());
 	} else {
 		fprintf(stdout, "client(%p) connect succeed.\n", &pClients);
 	}
-	memset(senddata, 0, sizeof(senddata));
-	sprintf(senddata, "client(%p) call %d", &pClients, ++call_time);
-	NetPacket packet;
-	packet.header = 0x01;
-	packet.tail = 0x02;
-	packet.datalen = (std::min)(strlen(senddata), sizeof(senddata) - 1);
-	std::string str = PacketData(packet, (const unsigned char*)senddata);
-	if (pClients.Send(&str[0], str.length()) <= 0) {
-		fprintf(stdout, "(%p)send error.%s\n", &pClients, pClients.GetLastErrMsg());
-	} else {
-		fprintf(stdout, "send succeed:%s\n", senddata);
-	}
+// 	memset(senddata, 0, sizeof(senddata));
+// 	sprintf(senddata, "client(%p) call %d", &pClients, ++call_time);
+// 	NetPacket packet;
+// 	packet.header = SERVER_PACKET_HEAD;
+// 	packet.tail = SERVER_PACKET_TAIL;
+// 	packet.datalen = (std::min)(strlen(senddata), sizeof(senddata) - 1);
+// 	std::string str = PacketData(packet, (const unsigned char*)senddata);
+// 	if (pClients.Send(&str[0], str.length()) <= 0) {
+// 		fprintf(stdout, "(%p)send error.%s\n", &pClients, pClients.GetLastErrMsg());
+// 	} else {
+// 		fprintf(stdout, "send succeed:%s\n", senddata);
+// 	}
+	pClients.SendUvMessage("aaaaaaaaaaaaa", 5555);
 	while (!is_exist) {
 		Sleep(10);
 	}

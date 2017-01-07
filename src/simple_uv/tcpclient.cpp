@@ -7,10 +7,9 @@ namespace uv
 {
 /*****************************************TCP Client*************************************************************/
 TCPClient::TCPClient(char packhead, char packtail)
-    : PACKET_HEAD(packhead), PACKET_TAIL(packtail)
-    , recvcb_(nullptr), recvcb_userdata_(nullptr), closedcb_(nullptr), closedcb_userdata_(nullptr)
+    : CTcpHandle(packhead, packtail)
+	, closedcb_(nullptr), closedcb_userdata_(nullptr)
     , connectstatus_(CONNECT_DIS), write_circularbuf_(BUFFER_SIZE)
-    , reconnectcb_(nullptr), reconnect_userdata_(nullptr)
     , isIPv6_(false), isreconnecting_(false)
 {
     client_handle_ = AllocTcpClientCtx(this);
@@ -40,7 +39,7 @@ bool TCPClient::init()
 		client_handle_->parent_server = this;
 
 		client_handle_->packet_->SetPacketCB(GetPacket, client_handle_);
-		client_handle_->packet_->Start(PACKET_HEAD, PACKET_TAIL);
+		client_handle_->packet_->Start(packet_head, packet_tail);
 
 		int iret = uv_timer_init(&loop_, &reconnect_timer_);
 		if (iret) {
@@ -66,44 +65,16 @@ void TCPClient::closeinl()
     // LOGI("client(" << this << ")close");
 }
 
-bool TCPClient::run(int status)
+void TCPClient::ReConnectCB(NET_EVENT_TYPE eventtype)
 {
-    int iret = uv_run(&loop_, (uv_run_mode)status);
-    isclosed_ = true;
-    // LOGI("client had closed.");
-    if (closedcb_) {//trigger close cb to user
-        closedcb_(-1, closedcb_userdata_); //client id is -1.
-    }
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-        // // LOGI(errmsg_);
-        return false;
-    }
-    return true;
+	TCPClient* client = this;
+	if (NET_EVENT_TYPE_RECONNECT == eventtype) {
+	}
+	else {
+		fprintf(stdout, "server disconnect.\n");
+	}
 }
 
-bool TCPClient::SetNoDelay(bool enable)
-{
-    //http://blog.csdn.net/u011133100/article/details/21485983
-    int iret = uv_tcp_nodelay(&client_handle_->tcphandle, enable ? 1 : 0);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-        // // LOGI(errmsg_);
-        return false;
-    }
-    return true;
-}
-
-bool TCPClient::SetKeepAlive(int enable, unsigned int delay)
-{
-    int iret = uv_tcp_keepalive(&client_handle_->tcphandle, enable , delay);
-    if (iret) {
-        errmsg_ = GetUVError(iret);
-        // // LOGI(errmsg_);
-        return false;
-    }
-    return true;
-}
 
 bool TCPClient::Connect(const char* ip, int port)
 {
@@ -233,9 +204,8 @@ void TCPClient::AfterConnect(uv_connect_t* handle, int status)
     if (parent->isreconnecting_) {
         fprintf(stdout, "reconnect succeed\n");
         parent->StopReconnect();//reconnect succeed.
-        if (parent->reconnectcb_) {
-            parent->reconnectcb_(NET_EVENT_TYPE_RECONNECT, parent->reconnect_userdata_);
-        }
+        
+		parent->ReConnectCB(NET_EVENT_TYPE_RECONNECT);
     }
 }
 
@@ -249,9 +219,9 @@ int TCPClient::Send(const char* data, std::size_t len)
     uv_async_send(&async_handle_);
     size_t iret = 0;
     while (!isuseraskforclosed_) {
-        uv_mutex_lock(&mutex_writebuf_);
+        uv_mutex_lock(&mutex_clients_);
         iret += write_circularbuf_.write(data + iret, len - iret);
-        uv_mutex_unlock(&mutex_writebuf_);
+        uv_mutex_unlock(&mutex_clients_);
         if (iret < len) {
             ThreadSleep(100);
             continue;
@@ -263,22 +233,10 @@ int TCPClient::Send(const char* data, std::size_t len)
     return iret;
 }
 
-void TCPClient::SetRecvCB(ClientRecvCB pfun, void* userdata)
-{
-    recvcb_ = pfun;
-    recvcb_userdata_ = userdata;
-}
-
 void TCPClient::SetClosedCB(TcpCloseCB pfun, void* userdata)
 {
     closedcb_ = pfun;
     closedcb_userdata_ = userdata;
-}
-
-void TCPClient::SetReconnectCB(ReconnectCB pfun, void* userdata)
-{
-    reconnectcb_ = pfun;
-    reconnect_userdata_ = userdata;
 }
 
 void TCPClient::AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
@@ -294,9 +252,8 @@ void TCPClient::AfterRecv(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
     assert(theclass);
     TCPClient* parent = (TCPClient*)theclass->parent_server;
     if (nread < 0) {
-        if (parent->reconnectcb_) {
-            parent->reconnectcb_(NET_EVENT_TYPE_DISCONNECT, parent->reconnect_userdata_);
-        }
+		parent->ReConnectCB(NET_EVENT_TYPE_DISCONNECT);
+
         if (!parent->StartReconnect()) {
             fprintf(stdout, "Start Reconnect Failure.\n");
             return;
@@ -378,16 +335,8 @@ void TCPClient::StopLog()
     // zsummer::log4z::ILog4zManager::GetInstance()->Stop();
 }
 
-void TCPClient::GetPacket(const NetPacket& packethead, const unsigned char* packetdata, void* userdata)
-{
-    assert(userdata);
-    TcpClientCtx* theclass = (TcpClientCtx*)userdata;
-    TCPClient* parent = (TCPClient*)theclass->parent_server;
-    if (parent->recvcb_) {//cb the data to user
-        parent->recvcb_(packethead, packetdata, parent->recvcb_userdata_);
-    }
-}
 
+/*
 void TCPClient::AsyncCB(uv_async_t* handle)
 {
     TCPClient* theclass = (TCPClient*)handle->data;
@@ -397,7 +346,7 @@ void TCPClient::AsyncCB(uv_async_t* handle)
     }
     //check data to send
     theclass->send_inl(NULL);
-}
+}*/
 
 void TCPClient::send_inl(uv_write_t* req /*= NULL*/)
 {
@@ -410,9 +359,9 @@ void TCPClient::send_inl(uv_write_t* req /*= NULL*/)
         }
     }
     while (true) {
-        uv_mutex_lock(&mutex_writebuf_);
+        uv_mutex_lock(&mutex_clients_);
         if (write_circularbuf_.empty()) {
-            uv_mutex_unlock(&mutex_writebuf_);
+            uv_mutex_unlock(&mutex_clients_);
             break;
         }
         if (writeparam_list_.empty()) {
@@ -423,7 +372,7 @@ void TCPClient::send_inl(uv_write_t* req /*= NULL*/)
             writeparam_list_.pop_front();
         }
         writep->buf_.len = write_circularbuf_.read(writep->buf_.base, writep->buf_truelen_); 
-        uv_mutex_unlock(&mutex_writebuf_);
+        uv_mutex_unlock(&mutex_clients_);
         int iret = uv_write((uv_write_t*)&writep->write_req_, (uv_stream_t*)&client_handle_->tcphandle, &writep->buf_, 1, AfterSend);
         if (iret) {
             writeparam_list_.push_back(writep);//failure not call AfterSend. so recycle req
@@ -431,6 +380,22 @@ void TCPClient::send_inl(uv_write_t* req /*= NULL*/)
             fprintf(stdout, "send error. %s-%s\n", uv_err_name(iret), uv_strerror(iret));
         }
     }
+}
+
+int TCPClient::ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient)
+{
+	char senddata[256] = { 0 };
+	TCPClient* client = this;
+	sprintf_s(senddata, "****recv server data(%p,%d)", client, packet.datalen);
+	fprintf(stdout, "%s\n", senddata);
+	NetPacket tmppack = packet;
+	tmppack.datalen = (std::min)(strlen(senddata), sizeof(senddata) - 1);
+	std::string retstr = PacketData(senddata, 4444);
+	if (client->Send(&retstr[0], retstr.length()) <= 0) {
+		fprintf(stdout, "(%p)send error.%s\n", client, client->GetLastErrMsg());
+	}
+	// fprintf(stdout, "call time %d\n", ++call_time);
+	return 0;
 }
 
 void TCPClient::Close()

@@ -1,11 +1,15 @@
 #include "stdafx.h"
 #include "TcpHandle.h"
 #include "thread_uv.h"
+#include "BaseMsgDefine.h"
+#include <assert.h>
 
 
-CTcpHandle::CTcpHandle(void)
+CTcpHandle::CTcpHandle(char packhead, char packtail)
 	: isclosed_(true)
 	, isuseraskforclosed_(false)
+	, packet_head(packhead)
+	, packet_tail(packtail)
 {
 	int iret = uv_loop_init(&loop_);
 	if (iret) {
@@ -26,11 +30,33 @@ CTcpHandle::~CTcpHandle(void)
 	uv_loop_close(&loop_);
 }
 
-void SUV_EXPORT CTcpHandle::Close()
+void  CTcpHandle::Close()
 {
 	if (isclosed_) {
 		return;
 	}
+}
+
+bool  CTcpHandle::SetNoDelay(bool enable)
+{
+	int iret = uv_tcp_nodelay(&tcp_handle_, enable ? 1 : 0);
+	if (iret) {
+		errmsg_ = GetUVError(iret);
+		//        // LOGE(errmsg_);
+		return false;
+	}
+	return true;
+}
+
+bool  CTcpHandle::SetKeepAlive(int enable, unsigned int delay)
+{
+	int iret = uv_tcp_keepalive(&tcp_handle_, enable, delay);
+	if (iret) {
+		errmsg_ = GetUVError(iret);
+		// // LOGI(errmsg_);
+		return false;
+	}
+	return true;
 }
 
 bool CTcpHandle::init()
@@ -38,13 +64,13 @@ bool CTcpHandle::init()
 	if (!isclosed_) {
 		return true;
 	}
-	int iret = uv_async_init(&loop_, &async_handle_close_, AsyncCloseCB);
+	int iret = uv_async_init(&loop_, &async_handle_, AsyncCloseCB);
 	if (iret) {
 		errmsg_ = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
-	async_handle_close_.data = this;
+	async_handle_.data = this;
 
 	iret = uv_tcp_init(&loop_, &tcp_handle_);
 	if (iret) {
@@ -69,12 +95,40 @@ void CTcpHandle::AsyncCloseCB( uv_async_t* handle )
 	theclass->send_inl(NULL);
 }
 
-void SUV_EXPORT CTcpHandle::send_inl( uv_write_t* req /*= NULL*/ )
+void  CTcpHandle::send_inl( uv_write_t* req /*= NULL*/ )
 {
 
+}
+
+int CTcpHandle::ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient)
+{
+	return -1;
 }
 
 void CTcpHandle::closeinl()
 {
 	
+}
+
+bool CTcpHandle::run(int status /*= UV_RUN_DEFAULT*/)
+{
+	int iret = uv_run(&loop_, (uv_run_mode)status);
+	if (iret) {
+		errmsg_ = GetUVError(iret);
+		//        // LOGE(errmsg_);
+		return false;
+	}
+	return true;
+}
+
+void GetPacket(const NetPacket& packethead, const unsigned char* packetdata, void* userdata)
+{
+	fprintf(stdout, "Get control packet type %d\n", packethead.type);
+	assert(userdata);
+	TcpClientCtx* theclass = (TcpClientCtx*)userdata;
+	CTcpHandle* parent = (CTcpHandle*)theclass->parent_server;
+	/*const std::string& senddata = parent->protocol_->ParsePacket(packethead, packetdata);
+	parent->sendinl(senddata, theclass);*/
+	parent->ParsePacket(packethead, packetdata, theclass);
+	return;
 }

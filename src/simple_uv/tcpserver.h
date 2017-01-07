@@ -64,19 +64,21 @@ namespace uv
 		bool SUV_EXPORT Start(const char* ip, int port);//Start the server, ipv4
 		bool SUV_EXPORT Start6(const char* ip, int port);//Start the server, ipv6
 		void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
+		virtual int SUV_EXPORT ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
 
 		//Enable or disable Nagle’s algorithm. must call after Server succeed start.
-		bool SUV_EXPORT SetNoDelay(bool enable);
+		// bool SUV_EXPORT SetNoDelay(bool enable);
 
 		//Enable or disable KeepAlive. must call after Server succeed start.
 		//delay is the initial delay in seconds, ignored when enable is zero
-		bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
+		// bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
 
 
 	protected:
 		int SUV_EXPORT GetAvailaClientID()const;
-		virtual int SUV_EXPORT ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
-		virtual int SUV_EXPORT SendPacket(TcpClientCtx *pClient, const char *pData, size_t nSize);
+		// virtual int SUV_EXPORT SendUvMessage(TcpClientCtx *pClient, const char *pData, size_t nSize);
+		template<class TYPE>
+		int SendUvMessage(const TYPE& msg, size_t nMsgType, TcpClientCtx *pClient);
 		//Static callback function
 		static void AfterServerClose(uv_handle_t* handle);
 		static void DeleteTcpHandle(uv_handle_t* handle);//delete handle after close client
@@ -91,7 +93,7 @@ namespace uv
 
 		bool init();
 		void closeinl();//real close fun
-		bool run(int status = UV_RUN_DEFAULT);
+		// bool run(int status = UV_RUN_DEFAULT);
 		bool bind(const char* ip, int port);
 		bool bind6(const char* ip, int port);
 		bool listen(int backlog = SOMAXCONN);
@@ -110,7 +112,7 @@ namespace uv
 		static void StartThread(void* arg);//start thread,run until use close the server
 		int startstatus_;
 
-		std::string errmsg_;
+		// std::string errmsg_;
 
 		NewConnectCB newconcb_;
 		void* newconcb_userdata_;
@@ -121,8 +123,8 @@ namespace uv
 		std::string serverip_;
 		int serverport_;
 
-		char packet_head;//protocol head
-		char packet_tail;//protocol tail
+		// char packet_head;//protocol head
+		// char packet_tail;//protocol tail
 
 		std::list<TcpClientCtx*> avai_tcphandle_;//Availa accept client data
 		std::list<write_param*> writeparam_list_;//Availa write_t
@@ -131,8 +133,13 @@ namespace uv
 		friend static void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
 		friend static void AfterRecv(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf);
 		friend static void AfterSend(uv_write_t* req, int status);
-		friend static void GetPacket(const NetPacket& packethead, const unsigned char* packetdata, void* userdata);
 	};
+
+	template<class TYPE>
+	int uv::TCPServer::SendUvMessage(const TYPE& msg, size_t nMsgType, TcpClientCtx *pClient)
+	{
+		return this->sendinl(this->PacketData(msg, nMsgType), pClient); 
+	}
 
 	/***********************************************Accept client on Server**********************************************************************/
 	/*************************************************
@@ -181,14 +188,12 @@ namespace uv
 		friend static void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
 		friend static void AfterRecv(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf);
 		friend static void AfterSend(uv_write_t* req, int status);
-		friend static void GetPacket(const NetPacket& packethead, const unsigned char* packetdata, void* userdata);
 	};
 
 	//Global Function
 	static void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
 	static void AfterRecv(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf);
 	static void AfterSend(uv_write_t* req, int status);
-	static void GetPacket(const NetPacket& packethead, const unsigned char* packetdata, void* userdata);
 }
 
 
