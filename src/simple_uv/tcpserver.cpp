@@ -10,7 +10,7 @@ namespace uv
 {
 /*****************************************TCP Server*************************************************************/
 TCPServer::TCPServer()
-    : startstatus_(CONNECT_DIS)
+    : m_nStartsSatus(CONNECT_DIS)
 {
    
 }
@@ -19,7 +19,7 @@ TCPServer::TCPServer()
 TCPServer::~TCPServer()
 {
     Close();
-    uv_thread_join(&start_threadhandle_);
+    uv_thread_join(&m_startThreadHandle);
     
     for (auto it = avai_tcphandle_.begin(); it != avai_tcphandle_.end(); ++it) {
         FreeTcpClientCtx(*it);
@@ -36,21 +36,21 @@ TCPServer::~TCPServer()
 bool TCPServer::init()
 {
 	CTcpHandle::init();
-	return uv_tcp_nodelay(&tcp_handle_,  1) == 0;
+	return uv_tcp_nodelay(&m_tcpHandle,  1) == 0;
 }
 
 void TCPServer::closeinl()
 {
-    if (isclosed_) {
+    if (m_bIsClosed) {
         return;
     }
 
-    uv_mutex_lock(&mutex_clients_);
+    uv_mutex_lock(&m_mutexClients);
     for (auto it = m_mapClientsList.begin(); it != m_mapClientsList.end(); ++it) {
         auto data = it->second;
         data->Close();
     }
-    uv_walk(&loop_, CloseWalkCB, this);//close all handle in loop
+    uv_walk(&m_loop, CloseWalkCB, this);//close all handle in loop
 //    // LOGI("close server");
 }
 /*
@@ -93,13 +93,13 @@ bool TCPServer::bind(const char* ip, int port)
     struct sockaddr_in bind_addr;
     int iret = uv_ip4_addr(ip, port, &bind_addr);
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
 //        // LOGE(errmsg_);
         return false;
     }
-    iret = uv_tcp_bind(&tcp_handle_, (const struct sockaddr*)&bind_addr, 0);
+    iret = uv_tcp_bind(&m_tcpHandle, (const struct sockaddr*)&bind_addr, 0);
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
 //        // LOGE(errmsg_);
         return false;
     }
@@ -112,13 +112,13 @@ bool TCPServer::bind6(const char* ip, int port)
     struct sockaddr_in6 bind_addr;
     int iret = uv_ip6_addr(ip, port, &bind_addr);
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
 //        // LOGE(errmsg_);
         return false;
     }
-    iret = uv_tcp_bind(&tcp_handle_, (const struct sockaddr*)&bind_addr, 0);
+    iret = uv_tcp_bind(&m_tcpHandle, (const struct sockaddr*)&bind_addr, 0);
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
 //        // LOGE(errmsg_);
         return false;
     }
@@ -129,9 +129,9 @@ bool TCPServer::bind6(const char* ip, int port)
 
 bool TCPServer::listen(int backlog)
 {
-    int iret = uv_listen((uv_stream_t*) &tcp_handle_, backlog, AcceptConnection);
+    int iret = uv_listen((uv_stream_t*) &m_tcpHandle, backlog, AcceptConnection);
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
 //        // LOGE(errmsg_);
         return false;
     }
@@ -142,74 +142,74 @@ bool TCPServer::listen(int backlog)
 
 bool TCPServer::Start(const char* ip, int port)
 {
-    serverip_ = ip;
-    serverport_ = port;
+    m_nServerIP = ip;
+    m_nServerPort = port;
     closeinl();
     if (!init()) {
         return false;
     }
-    if (!bind(serverip_.c_str(), serverport_)) {
+    if (!bind(m_nServerIP.c_str(), m_nServerPort)) {
         return false;
     }
     if (!listen(SOMAXCONN)) {
         return false;
     }
-    int iret = uv_thread_create(&start_threadhandle_, StartThread, this);//use thread to wait for start succeed.
+    int iret = uv_thread_create(&m_startThreadHandle, StartThread, this);//use thread to wait for start succeed.
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
 //        // LOGE(errmsg_);
         return false;
     }
     int wait_count = 0;
-    while (startstatus_ == CONNECT_DIS) {
+    while (m_nStartsSatus == CONNECT_DIS) {
         ThreadSleep(100);
         if (++wait_count > 100) {
-            startstatus_ = CONNECT_TIMEOUT;
+            m_nStartsSatus = CONNECT_TIMEOUT;
             break;
         }
     }
-    return startstatus_ == CONNECT_FINISH;
+    return m_nStartsSatus == CONNECT_FINISH;
 }
 
 bool TCPServer::Start6(const char* ip, int port)
 {
-    serverip_ = ip;
-    serverport_ = port;
+    m_nServerIP = ip;
+    m_nServerPort = port;
     closeinl();
     if (!init()) {
         return false;
     }
-    if (!bind6(serverip_.c_str(), serverport_)) {
+    if (!bind6(m_nServerIP.c_str(), m_nServerPort)) {
         return false;
     }
     if (!listen(SOMAXCONN)) {
         return false;
     }
-    int iret = uv_thread_create(&start_threadhandle_, StartThread, this);//use thread to wait for start succeed.
+    int iret = uv_thread_create(&m_startThreadHandle, StartThread, this);//use thread to wait for start succeed.
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
 //        // LOGE(errmsg_);
         return false;
     }
     int wait_count = 0;
-    while (startstatus_ == CONNECT_DIS) {
+    while (m_nStartsSatus == CONNECT_DIS) {
         ThreadSleep(100);
         if (++wait_count > 100) {
-            startstatus_ = CONNECT_TIMEOUT;
+            m_nStartsSatus = CONNECT_TIMEOUT;
             break;
         }
     }
-    return startstatus_ == CONNECT_FINISH;
+    return m_nStartsSatus == CONNECT_FINISH;
 }
 
 void TCPServer::StartThread(void* arg)
 {
     TCPServer* theclass = (TCPServer*)arg;
-    theclass->startstatus_ = CONNECT_FINISH;
+    theclass->m_nStartsSatus = CONNECT_FINISH;
     theclass->run();
     //the server is close when come here
-    theclass->isclosed_ = true;
-    theclass->isuseraskforclosed_ = false;
+    theclass->m_bIsClosed = true;
+    theclass->m_bIsUserAskForClosed = false;
 //    // LOGI("server  had closed.");
 //     if (theclass->closedcb_) {//trigger the close cb
 //         theclass->closedcb_(-1, theclass->closedcb_userdata_);
@@ -222,7 +222,7 @@ void TCPServer::AcceptConnection(uv_stream_t* server, int status)
     TCPServer* tcpsock = (TCPServer*)server->data;
     assert(tcpsock);
     if (status) {
-        tcpsock->errmsg_ = GetUVError(status);
+        tcpsock->m_strErrMsg = GetUVError(status);
 //        // LOGE(tcpsock->errmsg_);
         return;
     }
@@ -234,10 +234,10 @@ void TCPServer::AcceptConnection(uv_stream_t* server, int status)
         tcpsock->avai_tcphandle_.pop_front();
         tmptcp->parent_acceptclient = NULL;
     }
-    int iret = uv_tcp_init(&tcpsock->loop_, &tmptcp->tcphandle);
+    int iret = uv_tcp_init(&tcpsock->m_loop, &tmptcp->tcphandle);
     if (iret) {
         tcpsock->avai_tcphandle_.push_back(tmptcp);//Recycle
-        tcpsock->errmsg_ = GetUVError(iret);
+        tcpsock->m_strErrMsg = GetUVError(iret);
 //        // LOGE(tcpsock->errmsg_);
         return;
     }
@@ -248,24 +248,24 @@ void TCPServer::AcceptConnection(uv_stream_t* server, int status)
     iret = uv_accept((uv_stream_t*)server, (uv_stream_t*)&tmptcp->tcphandle);
     if (iret) {
         tcpsock->avai_tcphandle_.push_back(tmptcp);//Recycle
-        tcpsock->errmsg_ = GetUVError(iret);
+        tcpsock->m_strErrMsg = GetUVError(iret);
 //        // LOGE(tcpsock->errmsg_);
         return;
     }
     tmptcp->packet_->SetPacketCB(GetPacket, tmptcp);
-    tmptcp->packet_->Start(tcpsock->packet_head, tcpsock->packet_tail);
+    tmptcp->packet_->Start(tcpsock->m_cPacketHead, tcpsock->m_cPacketTail);
     iret = uv_read_start((uv_stream_t*)&tmptcp->tcphandle, AllocBufferForRecv, AfterRecv);
     if (iret) {
         uv_close((uv_handle_t*)&tmptcp->tcphandle, TCPServer::RecycleTcpHandle);
-        tcpsock->errmsg_ = GetUVError(iret);
+        tcpsock->m_strErrMsg = GetUVError(iret);
         // LOGE(tcpsock->errmsg_);
         return;
     }
-    AcceptClient* cdata = new AcceptClient(tmptcp, clientid, tcpsock->packet_head, tcpsock->packet_tail, &tcpsock->loop_); //delete on SubClientClosed
+    AcceptClient* cdata = new AcceptClient(tmptcp, clientid, tcpsock->m_cPacketHead, tcpsock->m_cPacketTail, &tcpsock->m_loop); //delete on SubClientClosed
     cdata->SetClosedCB(TCPServer::SubClientClosed, tcpsock);
-    uv_mutex_lock(&tcpsock->mutex_clients_);
+    uv_mutex_lock(&tcpsock->m_mutexClients);
     tcpsock->m_mapClientsList.insert(std::make_pair(clientid, cdata)); //add accept client
-    uv_mutex_unlock(&tcpsock->mutex_clients_);
+    uv_mutex_unlock(&tcpsock->m_mutexClients);
 
 	tcpsock->NewConnect(clientid);
     // LOGI("new client id=" << clientid);
@@ -354,7 +354,7 @@ void TCPServer::StopLog()
 void TCPServer::SubClientClosed(int clientid, void* userdata)
 {
     TCPServer* theclass = (TCPServer*)userdata;
-    uv_mutex_lock(&theclass->mutex_clients_);
+    uv_mutex_lock(&theclass->m_mutexClients);
     auto itfind = theclass->m_mapClientsList.find(clientid);
     if (itfind != theclass->m_mapClientsList.end()) {
 		theclass->CloseCB(clientid);
@@ -368,13 +368,13 @@ void TCPServer::SubClientClosed(int clientid, void* userdata)
         fprintf(stdout, "delete client：%d\n", itfind->first);
         theclass->m_mapClientsList.erase(itfind);
     }
-    uv_mutex_unlock(&theclass->mutex_clients_);
+    uv_mutex_unlock(&theclass->m_mutexClients);
 }
 
 void TCPServer::AsyncCloseCB(uv_async_t* handle)
 {
     TCPServer* theclass = (TCPServer*)handle->data;
-    if (theclass->isuseraskforclosed_) {
+    if (theclass->m_bIsUserAskForClosed) {
         theclass->closeinl();
     }
         return;
@@ -382,11 +382,11 @@ void TCPServer::AsyncCloseCB(uv_async_t* handle)
 
 void TCPServer::Close()
 {
-    if (isclosed_) {
+    if (m_bIsClosed) {
         return;
     }
-    isuseraskforclosed_ = true;
-    uv_async_send(&async_handle_);
+    m_bIsUserAskForClosed = true;
+    uv_async_send(&m_asyncHandle);
 }
 
 bool TCPServer::broadcast(const std::string& senddata, std::vector<int> excludeid)
@@ -395,7 +395,7 @@ bool TCPServer::broadcast(const std::string& senddata, std::vector<int> excludei
         // LOGI("broadcast data is empty.");
         return true;
     }
-    uv_mutex_lock(&mutex_clients_);
+    uv_mutex_lock(&m_mutexClients);
     AcceptClient* pClient = NULL;
     write_param* writep = NULL;
     if (excludeid.empty()) {
@@ -414,7 +414,7 @@ bool TCPServer::broadcast(const std::string& senddata, std::vector<int> excludei
             sendinl(senddata, pClient->GetTcpHandle());
         }
     }
-    uv_mutex_unlock(&mutex_clients_);
+    uv_mutex_unlock(&m_mutexClients);
     return true;
 }
 
@@ -441,7 +441,7 @@ bool TCPServer::sendinl(const std::string& senddata, TcpClientCtx* client)
     int iret = uv_write((uv_write_t*)&writep->write_req_, (uv_stream_t*)&client->tcphandle, &writep->buf_, 1, AfterSend);//发送
     if (iret) {
         writeparam_list_.push_back(writep);
-        errmsg_ = "send data error.";
+        m_strErrMsg = "send data error.";
         // LOGE("client(" << client << ") send error:" << GetUVError(iret));
         fprintf(stdout, "send error. %s-%s\n", uv_err_name(iret), uv_strerror(iret));
         return false;
@@ -468,9 +468,9 @@ int TCPServer::ParsePacket( const NetPacket& packet, const unsigned char* buf, T
 
 /*****************************************AcceptClient*************************************************************/
 AcceptClient::AcceptClient(TcpClientCtx* control,  int clientid, char packhead, char packtail, uv_loop_t* loop)
-    : client_handle_(control)
-    , client_id_(clientid), loop_(loop)
-    , isclosed_(true)
+    : m_pClientHandle(control)
+    , m_nClientID(clientid), loop_(loop)
+    , m_bIsClosed(true)
     // , recvcb_(nullptr), recvcb_userdata_(nullptr)
 	, closedcb_(nullptr), closedcb_userdata_(nullptr)
 {
@@ -482,29 +482,29 @@ AcceptClient::~AcceptClient()
     Close();
     //while will block loop.
 	//the right way is new AcceptClient and delete it on SetClosedCB'cb
-    while (!isclosed_) {
+    while (!m_bIsClosed) {
         ThreadSleep(10);
     }
 }
 
 bool AcceptClient::init(char packhead, char packtail)
 {
-    if (!isclosed_) {
+    if (!m_bIsClosed) {
         return true;
     }
-    client_handle_->parent_acceptclient = this;
-    isclosed_ = false;
+    m_pClientHandle->parent_acceptclient = this;
+    m_bIsClosed = false;
     return true;
 }
 
 void AcceptClient::Close()
 {
-    if (isclosed_) {
+    if (m_bIsClosed) {
         return;
     }
-    client_handle_->tcphandle.data = this;
+    m_pClientHandle->tcphandle.data = this;
     //send close command
-    uv_close((uv_handle_t*)&client_handle_->tcphandle, AfterClientClose);
+    uv_close((uv_handle_t*)&m_pClientHandle->tcphandle, AfterClientClose);
     // LOGI("client(" << this << ")close");
 }
 
@@ -512,11 +512,11 @@ void AcceptClient::AfterClientClose(uv_handle_t* handle)
 {
     AcceptClient* theclass = (AcceptClient*)handle->data;
     assert(theclass);
-    if (handle == (uv_handle_t*)&theclass->client_handle_->tcphandle) {
-        theclass->isclosed_ = true;
+    if (handle == (uv_handle_t*)&theclass->m_pClientHandle->tcphandle) {
+        theclass->m_bIsClosed = true;
         // LOGI("client  had closed.");
         if (theclass->closedcb_) {//notice tcpserver the client had closed
-            theclass->closedcb_(theclass->client_id_, theclass->closedcb_userdata_);
+            theclass->closedcb_(theclass->m_nClientID, theclass->closedcb_userdata_);
         }
     }
 }
@@ -531,7 +531,7 @@ void AcceptClient::SetClosedCB(TcpCloseCB pfun, void* userdata)
 
 TcpClientCtx* AcceptClient::GetTcpHandle(void) const
 {
-    return client_handle_;
+    return m_pClientHandle;
 }
 
 /*****************************************Global*************************************************************/

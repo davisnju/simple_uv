@@ -31,10 +31,10 @@ public:
 	CTcpHandle();
 	~CTcpHandle(void);
 
-	virtual void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
+	virtual void SUV_EXPORT Close();  //send close command. verify IsClosed for real closed
 	virtual int SUV_EXPORT ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
-	bool SUV_EXPORT IsClosed() {//verify if real closed
-		return isclosed_;
+	bool SUV_EXPORT IsClosed() {  //verify if real closed
+		return m_bIsClosed;
 	};
 
 	//Enable or disable Nagle¡¯s algorithm. must call after Server succeed start.
@@ -45,27 +45,27 @@ public:
 	bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
 
 	const SUV_EXPORT char* GetLastErrMsg() const {
-		return errmsg_.c_str();
+		return m_strErrMsg.c_str();
 	};
 
 protected:
 	virtual bool init();
-	virtual void SUV_EXPORT send_inl(uv_write_t* req = NULL);//real send data fun
-	virtual void closeinl();//real close fun
+	virtual void SUV_EXPORT send_inl(uv_write_t* req = NULL);  //real send data fun
+	virtual void closeinl();  //real close fun
 	bool run(int status = UV_RUN_DEFAULT);
 
 	template<class TYPE>
 	string PacketData(const TYPE& msg, size_t nMsgType);
 
-	bool isclosed_;
-	bool isuseraskforclosed_;
-	char packet_head;//protocol head
-	char packet_tail;//protocol tail
-	uv_async_t async_handle_;
-	uv_tcp_t tcp_handle_;
-	uv_loop_t loop_;
-	std::string errmsg_;
-	uv_mutex_t mutex_clients_;//clients map mutex
+	bool m_bIsClosed;
+	bool m_bIsUserAskForClosed;
+	char m_cPacketHead;  //protocol head
+	char m_cPacketTail;  //protocol tail
+	uv_async_t m_asyncHandle;
+	uv_tcp_t m_tcpHandle;
+	uv_loop_t m_loop;
+	std::string m_strErrMsg;
+	uv_mutex_t m_mutexClients;  //clients map mutex
 
 	enum {
 		CONNECT_TIMEOUT,

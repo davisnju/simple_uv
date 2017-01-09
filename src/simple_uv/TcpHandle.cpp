@@ -6,42 +6,42 @@
 
 
 CTcpHandle::CTcpHandle()
-	: isclosed_(true)
-	, isuseraskforclosed_(false)
-	, packet_head(SERVER_PACKET_HEAD)
-	, packet_tail(SERVER_PACKET_TAIL)
+	: m_bIsClosed(true)
+	, m_bIsUserAskForClosed(false)
+	, m_cPacketHead(SERVER_PACKET_HEAD)
+	, m_cPacketTail(SERVER_PACKET_TAIL)
 {
-	int iret = uv_loop_init(&loop_);
+	int iret = uv_loop_init(&m_loop);
 	if (iret) {
-		errmsg_ = GetUVError(iret);
-		fprintf(stdout, "init loop error: %s\n", errmsg_.c_str());
+		m_strErrMsg = GetUVError(iret);
+		fprintf(stdout, "init loop error: %s\n", m_strErrMsg.c_str());
 	}
-	iret = uv_mutex_init(&mutex_clients_);
+	iret = uv_mutex_init(&m_mutexClients);
 	if (iret) {
-		errmsg_ = GetUVError(iret);
-		fprintf(stdout, "uv_mutex_init error: %s\n", errmsg_.c_str());
+		m_strErrMsg = GetUVError(iret);
+		fprintf(stdout, "uv_mutex_init error: %s\n", m_strErrMsg.c_str());
 	}
 }
 
 
 CTcpHandle::~CTcpHandle(void)
 {
-	uv_mutex_destroy(&mutex_clients_);
-	uv_loop_close(&loop_);
+	uv_mutex_destroy(&m_mutexClients);
+	uv_loop_close(&m_loop);
 }
 
 void  CTcpHandle::Close()
 {
-	if (isclosed_) {
+	if (m_bIsClosed) {
 		return;
 	}
 }
 
 bool  CTcpHandle::SetNoDelay(bool enable)
 {
-	int iret = uv_tcp_nodelay(&tcp_handle_, enable ? 1 : 0);
+	int iret = uv_tcp_nodelay(&m_tcpHandle, enable ? 1 : 0);
 	if (iret) {
-		errmsg_ = GetUVError(iret);
+		m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
@@ -50,9 +50,9 @@ bool  CTcpHandle::SetNoDelay(bool enable)
 
 bool  CTcpHandle::SetKeepAlive(int enable, unsigned int delay)
 {
-	int iret = uv_tcp_keepalive(&tcp_handle_, enable, delay);
+	int iret = uv_tcp_keepalive(&m_tcpHandle, enable, delay);
 	if (iret) {
-		errmsg_ = GetUVError(iret);
+		m_strErrMsg = GetUVError(iret);
 		// // LOGI(errmsg_);
 		return false;
 	}
@@ -61,33 +61,33 @@ bool  CTcpHandle::SetKeepAlive(int enable, unsigned int delay)
 
 bool CTcpHandle::init()
 {
-	if (!isclosed_) {
+	if (!m_bIsClosed) {
 		return true;
 	}
-	int iret = uv_async_init(&loop_, &async_handle_, AsyncCloseCB);
+	int iret = uv_async_init(&m_loop, &m_asyncHandle, AsyncCloseCB);
 	if (iret) {
-		errmsg_ = GetUVError(iret);
+		m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
-	async_handle_.data = this;
+	m_asyncHandle.data = this;
 
-	iret = uv_tcp_init(&loop_, &tcp_handle_);
+	iret = uv_tcp_init(&m_loop, &m_tcpHandle);
 	if (iret) {
-		errmsg_ = GetUVError(iret);
+		m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
-	tcp_handle_.data = this;
+	m_tcpHandle.data = this;
 	
-	isclosed_ = false;
+	m_bIsClosed = false;
 	return true;
 }
 
 void CTcpHandle::AsyncCloseCB( uv_async_t* handle )
 {
 	CTcpHandle* theclass = (CTcpHandle*)handle->data;
-	if (theclass->isuseraskforclosed_) {
+	if (theclass->m_bIsUserAskForClosed) {
 		theclass->closeinl();
 		return;
 	}
@@ -112,9 +112,9 @@ void CTcpHandle::closeinl()
 
 bool CTcpHandle::run(int status /*= UV_RUN_DEFAULT*/)
 {
-	int iret = uv_run(&loop_, (uv_run_mode)status);
+	int iret = uv_run(&m_loop, (uv_run_mode)status);
 	if (iret) {
-		errmsg_ = GetUVError(iret);
+		m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}

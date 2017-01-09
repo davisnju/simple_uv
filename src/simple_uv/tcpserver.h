@@ -53,7 +53,7 @@ namespace uv
 	public:
 		SUV_EXPORT TCPServer();
 		virtual SUV_EXPORT ~TCPServer();
-		//Start/Stop the log
+
 		static void SUV_EXPORT StartLog(const char* logpath = nullptr);
 		static void SUV_EXPORT StopLog();
 
@@ -63,15 +63,7 @@ namespace uv
 		bool SUV_EXPORT Start6(const char* ip, int port);//Start the server, ipv6
 		void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
 		virtual int SUV_EXPORT ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
-
-		//Enable or disable Nagle’s algorithm. must call after Server succeed start.
-		// bool SUV_EXPORT SetNoDelay(bool enable);
-
-		//Enable or disable KeepAlive. must call after Server succeed start.
-		//delay is the initial delay in seconds, ignored when enable is zero
-		// bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
-
-
+		
 	protected:
 		int SUV_EXPORT GetAvailaClientID()const;
 		void NewConnect(int clientid);
@@ -93,32 +85,19 @@ namespace uv
 
 		bool SUV_EXPORT init();
 		void SUV_EXPORT closeinl();//real close fun
-		// bool run(int status = UV_RUN_DEFAULT);
 		bool bind(const char* ip, int port);
 		bool bind6(const char* ip, int port);
 		bool listen(int backlog = SOMAXCONN);
 		bool SUV_EXPORT sendinl(const std::string& senddata, TcpClientCtx* client);
 		bool broadcast(const std::string& senddata, std::vector<int> excludeid);//broadcast to all clients, except the client who's id in excludeid
-		// uv_loop_t loop_;
-		// uv_tcp_t tcp_handle_;
-// 		uv_async_t async_handle_close_;
-// 		bool isclosed_;
-// 		bool isuseraskforclosed_;
-
-		std::map<int, AcceptClient*> m_mapClientsList; //clients map
-		// uv_mutex_t mutex_clients_;//clients map mutex
-
-		uv_thread_t start_threadhandle_;//start thread handle
-		static void StartThread(void* arg);//start thread,run until use close the server
-		int startstatus_;
-
-		// std::string errmsg_;
 		
-		std::string serverip_;
-		int serverport_;
+		std::map<int, AcceptClient*> m_mapClientsList; //clients map
 
-		// char packet_head;//protocol head
-		// char packet_tail;//protocol tail
+		uv_thread_t m_startThreadHandle;//start thread handle
+		static void StartThread(void* arg);//start thread,run until use close the server
+		int m_nStartsSatus;		
+		int m_nServerPort;
+		std::string m_nServerIP;
 
 		std::list<TcpClientCtx*> avai_tcphandle_;//Availa accept client data
 		std::list<write_param*> writeparam_list_;//Availa write_t
@@ -159,17 +138,17 @@ namespace uv
 		void Close();
 
 		const char* GetLastErrMsg() const {
-			return errmsg_.c_str();
+			return m_strErrMsg.c_str();
 		};
 	private:
 		bool init(char packhead, char packtail);
 
 		uv_loop_t* loop_;
-		int client_id_;
+		int m_nClientID;
 
-		TcpClientCtx* client_handle_;//accept client data
-		bool isclosed_;
-		std::string errmsg_;
+		TcpClientCtx* m_pClientHandle;//accept client data
+		bool m_bIsClosed;
+		std::string m_strErrMsg;
 
 		// ServerRecvCB recvcb_;
 		// void* recvcb_userdata_;

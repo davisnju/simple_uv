@@ -33,16 +33,16 @@ bool TCPClient::init()
 {
 	if (CTcpHandle::init())
 	{
-		client_handle_->tcphandle = this->tcp_handle_;
+		client_handle_->tcphandle = this->m_tcpHandle;
 		client_handle_->tcphandle.data = client_handle_;
 		client_handle_->parent_server = this;
 
 		client_handle_->packet_->SetPacketCB(GetPacket, client_handle_);
-		client_handle_->packet_->Start(packet_head, packet_tail);
+		client_handle_->packet_->Start(m_cPacketHead, m_cPacketTail);
 
-		int iret = uv_timer_init(&loop_, &reconnect_timer_);
+		int iret = uv_timer_init(&m_loop, &reconnect_timer_);
 		if (iret) {
-			errmsg_ = GetUVError(iret);
+			m_strErrMsg = GetUVError(iret);
 			// // LOGI(errmsg_);
 			return false;
 		}
@@ -56,11 +56,11 @@ bool TCPClient::init()
 
 void TCPClient::closeinl()
 {
-    if (isclosed_) {
+    if (m_bIsClosed) {
         return;
     }
     StopReconnect();
-    uv_walk(&loop_, CloseWalkCB, this);
+    uv_walk(&m_loop, CloseWalkCB, this);
     // LOGI("client(" << this << ")close");
 }
 
@@ -87,13 +87,13 @@ bool TCPClient::Connect(const char* ip, int port)
     struct sockaddr_in bind_addr;
     int iret = uv_ip4_addr(connectip_.c_str(), connectport_, &bind_addr);
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
         // // LOGI(errmsg_);
         return false;
     }
     iret = uv_tcp_connect(&connect_req_, &client_handle_->tcphandle, (const sockaddr*)&bind_addr, AfterConnect);
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
         // // LOGI(errmsg_);
         return false;
     }
@@ -101,7 +101,7 @@ bool TCPClient::Connect(const char* ip, int port)
     // LOGI("client(" << this << ")start connect to server(" << ip << ":" << port << ")");
     iret = uv_thread_create(&connect_threadhandle_, ConnectThread, this);//thread to wait for succeed connect.
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
         // // LOGI(errmsg_);
         return false;
     }
@@ -114,7 +114,7 @@ bool TCPClient::Connect(const char* ip, int port)
         }
     }
     if (CONNECT_FINISH != connectstatus_) {
-        errmsg_ = "connect time out";
+        m_strErrMsg = "connect time out";
         return false;
     } else {
         return true;
@@ -133,13 +133,13 @@ bool TCPClient::Connect6(const char* ip, int port)
     struct sockaddr_in6 bind_addr;
     int iret = uv_ip6_addr(connectip_.c_str(), connectport_, &bind_addr);
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
         // // LOGI(errmsg_);
         return false;
     }
     iret = uv_tcp_connect(&connect_req_, &client_handle_->tcphandle, (const sockaddr*)&bind_addr, AfterConnect);
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
         // // LOGI(errmsg_);
         return false;
     }
@@ -147,7 +147,7 @@ bool TCPClient::Connect6(const char* ip, int port)
     // LOGI("client(" << this << ")start connect to server(" << ip << ":" << port << ")");
     iret = uv_thread_create(&connect_threadhandle_, ConnectThread, this);//thread to wait for succeed connect.
     if (iret) {
-        errmsg_ = GetUVError(iret);
+        m_strErrMsg = GetUVError(iret);
         // // LOGI(errmsg_);
         return false;
     }
@@ -160,7 +160,7 @@ bool TCPClient::Connect6(const char* ip, int port)
         }
     }
     if (CONNECT_FINISH != connectstatus_) {
-        errmsg_ = "connect time out";
+        m_strErrMsg = "connect time out";
         return false;
     } else {
         return true;
@@ -179,9 +179,9 @@ void TCPClient::AfterConnect(uv_connect_t* handle, int status)
     TCPClient* parent = (TCPClient*)theclass->parent_server;
     if (status) {
         parent->connectstatus_ = CONNECT_ERROR;
-        parent->errmsg_ = GetUVError(status);
+        parent->m_strErrMsg = GetUVError(status);
         // // LOGI("client(" << parent << ") connect error:" << parent->errmsg_);
-        fprintf(stdout, "connect error:%s\n", parent->errmsg_.c_str());
+        fprintf(stdout, "connect error:%s\n", parent->m_strErrMsg.c_str());
         if (parent->isreconnecting_) {//reconnect failure, restart timer to trigger reconnect.
             uv_timer_stop(&parent->reconnect_timer_);
             parent->repeat_time_ *= 2;
@@ -192,9 +192,9 @@ void TCPClient::AfterConnect(uv_connect_t* handle, int status)
 
     int iret = uv_read_start(handle->handle, AllocBufferForRecv, AfterRecv);
     if (iret) {
-        parent->errmsg_ = GetUVError(status);
+        parent->m_strErrMsg = GetUVError(status);
         // // LOGI("client(" << parent << ") uv_read_start error:" << parent->errmsg_);
-        fprintf(stdout, "uv_read_start error:%s\n", parent->errmsg_.c_str());
+        fprintf(stdout, "uv_read_start error:%s\n", parent->m_strErrMsg.c_str());
         parent->connectstatus_ = CONNECT_ERROR;
     } else {
         parent->connectstatus_ = CONNECT_FINISH;
@@ -211,16 +211,16 @@ void TCPClient::AfterConnect(uv_connect_t* handle, int status)
 int TCPClient::Send(const char* data, std::size_t len)
 {
     if (!data || len <= 0) {
-        errmsg_ = "send data is null or len less than zero.";
+        m_strErrMsg = "send data is null or len less than zero.";
         // // LOGI(errmsg_);
         return 0;
     }
-    uv_async_send(&async_handle_);
+    uv_async_send(&m_asyncHandle);
     size_t iret = 0;
-    while (!isuseraskforclosed_) {
-        uv_mutex_lock(&mutex_clients_);
+    while (!m_bIsUserAskForClosed) {
+        uv_mutex_lock(&m_mutexClients);
         iret += write_circularbuf_.write(data + iret, len - iret);
-        uv_mutex_unlock(&mutex_clients_);
+        uv_mutex_unlock(&m_mutexClients);
         if (iret < len) {
             ThreadSleep(100);
             continue;
@@ -228,7 +228,7 @@ int TCPClient::Send(const char* data, std::size_t len)
             break;
         }
     }
-    uv_async_send(&async_handle_);
+    uv_async_send(&m_asyncHandle);
     return iret;
 }
 
@@ -353,9 +353,9 @@ void TCPClient::send_inl(uv_write_t* req /*= NULL*/)
         }
     }
     while (true) {
-        uv_mutex_lock(&mutex_clients_);
+        uv_mutex_lock(&m_mutexClients);
         if (write_circularbuf_.empty()) {
-            uv_mutex_unlock(&mutex_clients_);
+            uv_mutex_unlock(&m_mutexClients);
             break;
         }
         if (writeparam_list_.empty()) {
@@ -366,7 +366,7 @@ void TCPClient::send_inl(uv_write_t* req /*= NULL*/)
             writeparam_list_.pop_front();
         }
         writep->buf_.len = write_circularbuf_.read(writep->buf_.base, writep->buf_truelen_); 
-        uv_mutex_unlock(&mutex_clients_);
+        uv_mutex_unlock(&m_mutexClients);
         int iret = uv_write((uv_write_t*)&writep->write_req_, (uv_stream_t*)&client_handle_->tcphandle, &writep->buf_, 1, AfterSend);
         if (iret) {
             writeparam_list_.push_back(writep);//failure not call AfterSend. so recycle req
@@ -394,11 +394,11 @@ int TCPClient::ParsePacket(const NetPacket& packet, const unsigned char* buf, Tc
 
 void TCPClient::Close()
 {
-    if (isclosed_) {
+    if (m_bIsClosed) {
         return;
     }
-    isuseraskforclosed_ = true;
-    uv_async_send(&async_handle_);
+    m_bIsUserAskForClosed = true;
+    uv_async_send(&m_asyncHandle);
 }
 
 bool TCPClient::StartReconnect(void)
@@ -425,7 +425,7 @@ void TCPClient::ReconnectTimer(uv_timer_t* handle)
     }
     // LOGI("start reconnect...\n");
     do {
-        int iret = uv_tcp_init(&theclass->loop_, &theclass->client_handle_->tcphandle);
+        int iret = uv_tcp_init(&theclass->m_loop, &theclass->client_handle_->tcphandle);
         if (iret) {
             // // LOGI(GetUVError(iret));
             break;
