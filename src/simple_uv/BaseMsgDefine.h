@@ -2,6 +2,7 @@
 #include "uv.h"
 #include "packet_sync.h"
 
+
 namespace uv
 {
 	// class AcceptClient;
@@ -24,3 +25,20 @@ namespace uv
 	write_param* AllocWriteParam(void);
 	void FreeWriteParam(write_param* param);
 }
+#define BASE_MSG_BEGIN 10000
+
+enum 
+{
+	REGIST_THREAD_MSG = BASE_MSG_BEGIN,
+	UN_REGIST_THREAD_MSG
+};
+
+class CRegistMsg
+{
+public:
+	enum {
+		MSG_ID = REGIST_THREAD_MSG
+	};
+	unsigned int m_nType;
+	void *m_pData;
+};

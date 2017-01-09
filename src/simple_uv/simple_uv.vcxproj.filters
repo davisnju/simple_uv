@@ -45,6 +45,12 @@
     <ClInclude Include="TcpHandle.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="UVThreadMng.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="simple_locks.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -69,6 +75,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="TcpHandle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="thread_uv.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UVThreadMng.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

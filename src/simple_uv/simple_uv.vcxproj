@@ -87,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseMsgDefine.h" />
+    <ClInclude Include="simple_locks.h" />
     <ClInclude Include="simple_uv_export.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -94,6 +95,7 @@
     <ClInclude Include="TcpHandle.h" />
     <ClInclude Include="tcpserver.h" />
     <ClInclude Include="thread_uv.h" />
+    <ClInclude Include="UVThreadMng.h" />
     <ClInclude Include="uv_msg_framing.h" />
   </ItemGroup>
   <ItemGroup>
@@ -114,6 +116,8 @@
     <ClCompile Include="tcpclient.cpp" />
     <ClCompile Include="TcpHandle.cpp" />
     <ClCompile Include="tcpserver.cpp" />
+    <ClCompile Include="thread_uv.cpp" />
+    <ClCompile Include="UVThreadMng.cpp" />
     <ClCompile Include="uv_msg_framing.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

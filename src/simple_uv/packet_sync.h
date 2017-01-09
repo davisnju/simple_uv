@@ -21,7 +21,7 @@ packet.Start(0x01,0x02);
 #include <algorithm>
 #include "openssl/md5.h"
 #include "net_base.h"
-#include "thread_uv.h"//for GetUVError
+#include "simple_locks.h"//for GetUVError
 #if defined (WIN32) || defined(_WIN32)
 #include <windows.h>
 #define ThreadSleep(ms) Sleep(ms);//睡眠ms毫秒
@@ -42,6 +42,7 @@ typedef void (*GetFullPacket)(const NetPacket& packethead, const unsigned char* 
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE (1024*10)
 #endif
+
 
 class PacketSync
 {

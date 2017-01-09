@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "tcpclient.h"
+#include "thread_uv.h"
 // #include "log4z.h"
 #define MAXLISTSIZE 20
 
