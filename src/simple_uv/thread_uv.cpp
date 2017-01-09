@@ -4,7 +4,7 @@
 void CUVThread::PushBackMsg(NodeMsg *msg)
 {
 	m_lock.WriteLock();
-	if (msgTail)
+	if (!msgTail)
 	{
 		msg->next = msg;
 		msgTail = msg;
@@ -62,7 +62,6 @@ void CUVThread::Run()
 	}
 }
 
-
 void CUVThread::OnUvThreadMessage(CRegistMsg msg, unsigned int nSrcAddr)
 {
 	m_mapThread[msg.m_nType] = (CUVThread *)(msg.m_pData);
@@ -83,5 +82,17 @@ SUV_EXPORT int CUVThread::OnInit()
 	CUVThreadMng::GetInstance()->RegistThread(m_nThreadType, this);
 
 	return 0;
+}
+
+SUV_EXPORT void CUVThread::OnExit()
+{
+	CUVThreadMng::GetInstance()->UnRegistThread(m_nThreadType);
+
+	for (map<unsigned int, CUVThread *>::iterator it = m_mapThread.begin();
+		it != m_mapThread.end(); )
+	{
+		m_mapThread.erase(it++);
+	}
+
 }
 

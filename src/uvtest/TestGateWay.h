@@ -2,12 +2,12 @@
 #include "tcpserver.h"
 #include "../message_define/TestMessage.h"
 
-class CTestServer :
+class CTestGateWay :
 	public TCPServer
 {
 public:
-	CTestServer();
-	virtual ~CTestServer();
+	CTestGateWay();
+	virtual ~CTestGateWay();
 
 protected:
 	BEGIN_UV_BIND
@@ -15,5 +15,7 @@ protected:
 	END_UV_BIND(TCPServer)
 
 	int OnUvMessage(const CTestMsg &msg, TcpClientCtx *pClient);
+
+	int m_nSessionID;
 };
 

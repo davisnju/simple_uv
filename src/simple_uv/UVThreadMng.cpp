@@ -25,6 +25,9 @@ CUVThreadMng* CUVThreadMng::GetInstance()
 void CUVThreadMng::RegistThread(unsigned int nType, CUVThread *pThread)
 {
 	m_lock.WriteLock();
+	
+
+	m_mapThread[nType] = pThread;
 
 	for (map<unsigned int, CUVThread *>::iterator it = m_mapThread.begin();
 	it != m_mapThread.end(); ++it)
@@ -35,7 +38,7 @@ void CUVThreadMng::RegistThread(unsigned int nType, CUVThread *pThread)
 		it->second->PushBackMsg(REGIST_THREAD_MSG, msg);
 	}
 
-	m_mapThread[nType] = pThread;
+
 	m_lock.WriteUnLock();
 }
 
@@ -66,3 +69,5 @@ CUVThreadMng::CUVThreadMng()
 CUVThreadMng::~CUVThreadMng()
 {
 }
+
+

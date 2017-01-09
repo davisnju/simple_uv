@@ -39,6 +39,12 @@ public:
 	enum {
 		MSG_ID = REGIST_THREAD_MSG
 	};
+
+	~CRegistMsg()
+	{
+		m_pData = nullptr;
+	}
+
 	unsigned int m_nType;
 	void *m_pData;
 };

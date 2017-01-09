@@ -141,23 +141,27 @@ public:
         return isrunning_;
     }
 
-	void PushBackMsg(NodeMsg *msg);
 	template<class TYPE>
 	void PushBackMsg(unsigned int nMsgType, const TYPE &msg, unsigned int nSrcAddr = 0);
 
 protected:
 	virtual SUV_EXPORT void Run();
 	virtual SUV_EXPORT int OnInit();
+	virtual SUV_EXPORT void OnExit();
+
+	template<class TYPE>
+	int SendUvMessage(const TYPE& msg, size_t nMsgType, unsigned int nDstAddr);
 
 	BEGIN_UV_THREAD_BIND
 		UV_THREAD_BIND(CRegistMsg::MSG_ID, CRegistMsg)
 		UV_THREAD_BIND(UN_REGIST_THREAD_MSG, unsigned int)
 	END_BASE_UV_THREAD_BIND
-
-	void OnUvThreadMessage(CRegistMsg msg, unsigned int nSrcAddr);
-	void OnUvThreadMessage(unsigned int msg, unsigned int nSrcAddr);
+		
+	void SUV_EXPORT OnUvThreadMessage(CRegistMsg msg, unsigned int nSrcAddr);
+	void SUV_EXPORT OnUvThreadMessage(unsigned int msg, unsigned int nSrcAddr);
 
 private:
+	void SUV_EXPORT PushBackMsg(NodeMsg *msg);  // 这个函数调用的时候注意传递的值
 	CUVThread(){}
 	static void ThreadFun(void* arg);
 	unsigned int m_nThreadType;
@@ -169,12 +173,30 @@ private:
 };
 
 template<class TYPE>
+int CUVThread::SendUvMessage( const TYPE& msg, size_t nMsgType, unsigned int nDstAddr )
+{
+	map<unsigned int, CUVThread *>::iterator it = m_mapThread.find(nDstAddr);
+
+	if (it == m_mapThread.end())
+	{
+		return -1;
+	}
+
+	it->second->PushBackMsg(nMsgType, msg, m_nThreadType);
+
+	return 0;
+}
+
+template<class TYPE>
 void CUVThread::PushBackMsg(unsigned int nMsgType, const TYPE &msg, unsigned int nSrcAddr)
 {
 	NodeMsg *pMsg = new NodeMsg;
 	pMsg->m_nMsgType = nMsgType;
 	pMsg->m_nSrcAddr = nSrcAddr;
-	pMsg->m_pData = const_cast<TYPE *>(&msg);
+	TYPE *pData = new TYPE(msg);
+	pMsg->m_pData = pData;
+
+	this->PushBackMsg(pMsg);
 }
 
 #endif //COMMON_THREAD_UV_H

@@ -24,10 +24,13 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="TestServer.h">
+    <ClInclude Include="..\message_define\TestMessage.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\message_define\TestMessage.h">
+    <ClInclude Include="TestGateWay.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TestServerCenter.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,7 +41,10 @@
     <ClCompile Include="uvtest.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="TestServer.cpp">
+    <ClCompile Include="TestGateWay.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TestServerCenter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

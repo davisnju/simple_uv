@@ -3,18 +3,34 @@
 
 #include <map>
 #include "thread_uv.h"
+#include "simple_uv_export.h"
 using namespace std;
 
 class CUVThreadMng
 {
 public:
 	
-	static CUVThreadMng* GetInstance();
+	static SUV_EXPORT CUVThreadMng* GetInstance();
 	void RegistThread(unsigned int nType, CUVThread *pThread);
 	void UnRegistThread(unsigned int nType);
 
 	template<class TYPE>
-	int SendUvMessage(const TYPE& msg, size_t nMsgType, unsigned int nDstAddr, unsigned int nSrcAddr = 0);
+	int  SendUvMessage(const TYPE& msg, size_t nMsgType, unsigned int nDstAddr, unsigned int nSrcAddr = 0)
+	{
+		m_lock.ReadLock();
+		map<unsigned int, CUVThread *>::iterator it = m_mapThread.find(nDstAddr);
+
+		if (it == m_mapThread.end())
+		{
+			m_lock.ReadUnLock();
+			return -1;
+		}
+
+		it->second->PushBackMsg(nMsgType, msg, nSrcAddr);
+		m_lock.ReadUnLock();
+
+		return 0;
+	}
 
 private:
 	CUVThreadMng();
@@ -24,24 +40,6 @@ private:
 	static CUVThreadMng* m_pMng;
 	static CUVMutex      m_Mutex;
 };
-
-template<class TYPE>
-int CUVThreadMng::SendUvMessage( const TYPE& msg, size_t nMsgType, unsigned int nDstAddr, unsigned int nSrcAddr )
-{
-	m_lock.ReadLock();
-	map<unsigned int, CUVThread *>::iterator it = m_mapThread.find(nDstAddr);
-
-	if (it == m_mapThread.end())
-	{
-		m_lock.ReadUnLock();
-		return -1;
-	}
-
-	it->second->PushBackMsg(nMsgType, msg, nSrcAddr);
-	m_lock.ReadUnLock();
-
-	return 0;
-}
 
 #endif
 
