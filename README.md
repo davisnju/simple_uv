@@ -23,6 +23,6 @@ simple_uv简化了客户端与服务端的通信，客户端与服务端的所�
 
 为了降低入门门槛，simple_uv还提供了一套mysql的封装，你无需懂sql语句也可以做数据库相关的开发工作，你只需要填填对应字段即可完成数据库操作。（后续提供）
 
-simple_uv在网络发包的代码参考了phata（wqvbjhc@gmail.com）在GitHub上的开源代码https://github.com/wqvbjhc/libuv_tcp.git，感谢phata的卓越贡献。
+simple_uv在网络发包的代码参考了phata（wqvbjhc@gmail.com）在GitHub上的开源代码https://github.com/wqvbjhc/libuv_tcp.git
 
 对simple_uv有任何问题可以邮件gzssyxwdy@163.com。
