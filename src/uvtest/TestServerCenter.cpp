@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "TestServerCenter.h"
 #include "../message_define/TestMessage.h"
 

@@ -1,8 +1,6 @@
-#include "stdafx.h"
 #include <iostream>
 #include <string>
 #include "TestGateWay.h"
-#include "DumpFile.h"
 #include "TestServerCenter.h"
 
 using namespace std;
@@ -14,7 +12,6 @@ int call_time = 0;
 
 int main(int argc, char** argv)
 {
-	DeclareDumpFile();
 	CTestGateWay server;
 
 	if(!server.Start("0.0.0.0",12345)) {
@@ -26,7 +23,7 @@ int main(int argc, char** argv)
 	CTestServerCenter serverCenter;
 	serverCenter.Start();
 	while(!is_eist) {
-		Sleep(10);
+		uv_thread_sleep(10);
 	}
 	return 0;
 }

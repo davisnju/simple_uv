@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "TestGateWay.h"
 #include "UVThreadMng.h"
 

@@ -1,6 +1,7 @@
-#include "stdafx.h"
-#include "uv_msg_framing.h"
 
+#include "uv_msg_framing.h"
+#include <string.h>
+using namespace std; 
 #ifdef DEBUGTRACE
 #define UVTRACE(X)   printf X;
 #else

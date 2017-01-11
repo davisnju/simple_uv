@@ -5,7 +5,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "uvtest", "src\uvtest\uvtest
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple_uv", "src\simple_uv\simple_uv.vcxproj", "{F084EEDA-533F-4CB9-9AA7-183128DA123D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libuv", "src\libuv-1.x\libuv.vcxproj", "{33066374-88CB-CB8D-15DA-61032886329A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libuv", "src\libuv\libuv.vcxproj", "{33066374-88CB-CB8D-15DA-61032886329A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

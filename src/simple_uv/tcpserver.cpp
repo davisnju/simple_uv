@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+﻿// #include "stdafx.h"
 #include "tcpserver.h"
 #include "thread_uv.h"
 #include <assert.h>
@@ -451,9 +451,7 @@ bool TCPServer::sendinl(const std::string& senddata, TcpClientCtx* client)
 
 int TCPServer::ParsePacket( const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient)
 {
-	char pData[255] = {0};
-	sprintf_s(pData,"****recv datalen %d",packet.datalen);
-	return this->SendUvMessage(pData, 4444, pClient);
+	return 0;
 }
 // 
 // int TCPServer::SendUvMessage( TcpClientCtx *pClient, const char *pData, size_t nSize)

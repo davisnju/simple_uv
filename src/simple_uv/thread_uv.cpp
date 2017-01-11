@@ -40,7 +40,7 @@ void CUVThread::Run()
 	{
 		if (msgTail == nullptr)
 		{
-			Sleep(100);
+			uv_thread_sleep(100);
 			continue;
 		}
 

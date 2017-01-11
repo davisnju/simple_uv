@@ -14,6 +14,7 @@
 #ifndef NET_BASE_H
 #define NET_BASE_H
 #include <stdint.h>
+#include <string.h>
 #if defined (WIN32) || defined (_WIN32)
 #include <WinSock2.h>
 #include <stdlib.h>
@@ -25,6 +26,7 @@
 #include <netinet/in.h>
 #endif
 
+using namespace std;
 //判断是否小端字节序，是返回true
 inline bool  IsLittleendian()
 {

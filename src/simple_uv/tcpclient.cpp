@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+﻿// #include "stdafx.h"
 #include "tcpclient.h"
 #include "thread_uv.h"
 // #include "log4z.h"
@@ -259,7 +259,7 @@ void TCPClient::AfterRecv(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
             fprintf(stdout, "Server close(conn reset),Client %p\n", handle);
             // LOGI(("Server close(conn reset)");
         } else {
-            fprintf(stdout, "Server close,Client %p:%s\n", handle, GetUVError(nread));
+            fprintf(stdout, "Server close,Client %p:%s\n", handle, GetUVError(nread).c_str());
             // LOGI(("Server close" << GetUVError(nread));
         }
         uv_close((uv_handle_t*)handle, AfterClientClose);//close before reconnect
@@ -281,7 +281,7 @@ void TCPClient::AfterSend(uv_write_t* req, int status)
             theclass->writeparam_list_.push_back((write_param*)req);
         }
         // // LOGI("send error:" << GetUVError(status));
-        fprintf(stderr, "send error %s\n", GetUVError(status));
+        fprintf(stderr, "send error %s\n", GetUVError(status).c_str());
         return;
     }
     theclass->send_inl(req);
@@ -378,17 +378,6 @@ void TCPClient::send_inl(uv_write_t* req /*= NULL*/)
 
 int TCPClient::ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient)
 {
-	char senddata[256] = { 0 };
-	TCPClient* client = this;
-	sprintf_s(senddata, "****recv server data(%p,%d)", client, packet.datalen);
-	fprintf(stdout, "%s\n", senddata);
-	NetPacket tmppack = packet;
-	tmppack.datalen = (std::min)(strlen(senddata), sizeof(senddata) - 1);
-	std::string retstr = PacketData(senddata, 4444);
-	if (client->Send(&retstr[0], retstr.length()) <= 0) {
-		fprintf(stdout, "(%p)send error.%s\n", client, client->GetLastErrMsg());
-	}
-	// fprintf(stdout, "call time %d\n", ++call_time);
 	return 0;
 }
 

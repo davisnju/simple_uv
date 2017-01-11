@@ -64,6 +64,10 @@ namespace uv
 		void SUV_EXPORT Close();//send close command. verify IsClosed for real closed
 		virtual int SUV_EXPORT ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
 		
+		friend void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
+		friend void AfterRecv(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf);
+		friend void AfterSend(uv_write_t* req, int status);
+		
 	protected:
 		int SUV_EXPORT GetAvailaClientID()const;
 		void NewConnect(int clientid);
@@ -102,10 +106,6 @@ namespace uv
 		std::list<TcpClientCtx*> avai_tcphandle_;//Availa accept client data
 		std::list<write_param*> writeparam_list_;//Availa write_t
 
-	public:
-		friend static void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
-		friend static void AfterRecv(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf);
-		friend static void AfterSend(uv_write_t* req, int status);
 	};
 
 	template<class TYPE>
@@ -140,6 +140,11 @@ namespace uv
 		const char* GetLastErrMsg() const {
 			return m_strErrMsg.c_str();
 		};
+		
+		friend void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
+		friend void AfterRecv(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf);
+		friend void AfterSend(uv_write_t* req, int status);
+		
 	private:
 		bool init(char packhead, char packtail);
 
@@ -157,16 +162,12 @@ namespace uv
 		void* closedcb_userdata_;
 	private:
 		static void AfterClientClose(uv_handle_t* handle);
-	public:
-		friend static void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
-		friend static void AfterRecv(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf);
-		friend static void AfterSend(uv_write_t* req, int status);
 	};
 
 	//Global Function
-	static void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
-	static void AfterRecv(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf);
-	static void AfterSend(uv_write_t* req, int status);
+	void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
+	void AfterRecv(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf);
+	void AfterSend(uv_write_t* req, int status);
 }
 
 

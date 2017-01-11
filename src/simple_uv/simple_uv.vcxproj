@@ -41,7 +41,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)src\libuv-1.x\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)src\libuv\include\;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <LibraryPath>$(SolutionDir)lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <IntDir>$(SolutionDir)temp\$(Configuration)\</IntDir>
@@ -90,8 +90,6 @@
     <ClInclude Include="BaseMsgDefine.h" />
     <ClInclude Include="simple_locks.h" />
     <ClInclude Include="simple_uv_export.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
     <ClInclude Include="tcpclient.h" />
     <ClInclude Include="TcpHandle.h" />
     <ClInclude Include="tcpserver.h" />
@@ -101,19 +99,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseMsgDefine.cpp" />
-    <ClCompile Include="dllmain.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="simple_uv.cpp" />
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="tcpclient.cpp" />
     <ClCompile Include="TcpHandle.cpp" />
     <ClCompile Include="tcpserver.cpp" />

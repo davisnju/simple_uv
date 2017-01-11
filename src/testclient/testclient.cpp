@@ -1,12 +1,10 @@
-// testclient.cpp : 定义控制台应用程序的入口点。
 //
 
-#include "stdafx.h"
 
 #include <iostream>
 #include <string>
 #include "Test.h"
-#include "DumpFile.h"
+#include "thread_uv.h"
 using namespace std;
 using namespace uv;
 
@@ -21,7 +19,6 @@ int main(int argc, char** argv)
 		fprintf(stdout, "usage: %s server_ip_address clientcount\neg.%s 192.168.1.1 50\n", argv[0], argv[0]);
 		return 0;
 	}
-	DeclareDumpFile();
 	serverip = argv[1];
 
 	const int clientsize = std::stoi(argv[2]);
@@ -37,7 +34,7 @@ int main(int argc, char** argv)
 	msg.m_nSessionID = 1000;
 	pClients.SendUvMessage(msg, msg.MSG_ID);
 	while (!is_exist) {
-		Sleep(10);
+		uv_thread_sleep(10);
 	}
 	return 0;
 }
