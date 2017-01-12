@@ -2,6 +2,8 @@
 
 simple_uv是基于libuv封装跨平台库，旨在降低入门门槛和提高开发效率以及降低开发者人为出错的概率。
 
+libuv是Reactor模式，simple_uv是Proactor模式(对于上层业务开发者是Proactor模式)。
+
 simple_uv简化了客户端与服务端的通信，客户端与服务端的所有交互消息都以某一个类的对象回调到上层业务，你不用关注客户端与服务端通信过程中消息的解析以及堆空间的申请与释放等繁琐且易出错的处理。
 
 为了方便的进行多线程程序的开发以及多线程之间高效率的通信，simple_uv实现了一个CUVThread的线程类，类似windows上mfc中的CWinThread，可以响应其他线程发送过来的异步非阻塞消息，CUVThread提供了一个SendUvMessage的函数，可以向任意的CUVThread线程发送消息。
