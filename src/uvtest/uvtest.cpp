@@ -4,7 +4,7 @@
 #include "TestServerCenter.h"
 
 using namespace std;
-using namespace uv;
+
 bool is_eist = false;
 int call_time = 0;
 

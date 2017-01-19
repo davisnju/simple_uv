@@ -6,7 +6,7 @@
 #include "uv.h"
 #include "BaseMsgDefine.h"
 
-using namespace uv;
+
 using namespace std;
 
 #define SERVER_PACKET_HEAD 0x01
@@ -25,32 +25,32 @@ using namespace std;
 			return BASE_CLASS::ParsePacket(packet, buf, pClient); \
 	} \
 
-class CTcpHandle
+class SUV_EXPORT CTcpHandle
 {
 public:
 	CTcpHandle();
 	~CTcpHandle(void);
 
-	virtual void SUV_EXPORT Close();  //send close command. verify IsClosed for real closed
-	virtual int SUV_EXPORT ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
-	bool SUV_EXPORT IsClosed() {  //verify if real closed
+	virtual void  Close();  //send close command. verify IsClosed for real closed
+	virtual int  ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
+	bool  IsClosed() {  //verify if real closed
 		return m_bIsClosed;
 	};
 
 	//Enable or disable Nagle¡¯s algorithm. must call after Server succeed start.
-	bool SUV_EXPORT SetNoDelay(bool enable);
+	bool  SetNoDelay(bool enable);
 
 	//Enable or disable KeepAlive. must call after Server succeed start.
 	//delay is the initial delay in seconds, ignored when enable is zero
-	bool SUV_EXPORT SetKeepAlive(int enable, unsigned int delay);
+	bool  SetKeepAlive(int enable, unsigned int delay);
 
-	const SUV_EXPORT char* GetLastErrMsg() const {
+	const  char* GetLastErrMsg() const {
 		return m_strErrMsg.c_str();
 	};
 
 protected:
 	virtual bool init();
-	virtual void SUV_EXPORT send_inl(uv_write_t* req = NULL);  //real send data fun
+	virtual void  send_inl(uv_write_t* req = NULL);  //real send data fun
 	virtual void closeinl();  //real close fun
 	bool run(int status = UV_RUN_DEFAULT);
 

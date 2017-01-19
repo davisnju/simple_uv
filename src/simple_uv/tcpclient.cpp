@@ -4,8 +4,7 @@
 // #include "log4z.h"
 #define MAXLISTSIZE 20
 
-namespace uv
-{
+
 /*****************************************TCP Client*************************************************************/
 TCPClient::TCPClient()
     : connectstatus_(CONNECT_DIS), write_circularbuf_(BUFFER_SIZE)
@@ -460,4 +459,3 @@ void TCPClient::CloseCB(int clientid, void* userdata)
 	this->Close();
 }
 
-}

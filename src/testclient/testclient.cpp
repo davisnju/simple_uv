@@ -6,7 +6,6 @@
 #include "Test.h"
 #include "thread_uv.h"
 using namespace std;
-using namespace uv;
 
 std::string serverip;
 int call_time = 0;

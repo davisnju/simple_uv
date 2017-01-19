@@ -17,7 +17,7 @@ SOURCE = $(wildcard $(TEST_DIR)/*.cpp)
 #4、指定您附加的搜索编译目录，不要指到其他模块内部
 USER_CC_INC = -I$(TEST_DIR) \
 			-I$(UV_DIR) \
-			-I$(SIMPLE_UV_DIR) 
+			-I$(SIMPLE_UV_DIR)  -I$(WORK_ROOT)/src/openssl/include/
 			
 
 #6、指定您附加的库文件搜索目录，例如：-L./MYSUBDIR

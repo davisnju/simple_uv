@@ -87,7 +87,7 @@ inline SUV_EXPORT std::string GetUVError(int errcode)
 
 #define END_BASE_UV_THREAD_BIND return ; } \
 
-class CUVThread
+class SUV_EXPORT CUVThread
 {
 public:
 	struct NodeMsg
@@ -101,14 +101,14 @@ public:
 		}
 	};
 
-    SUV_EXPORT CUVThread(unsigned int nThreadType)
+	CUVThread(unsigned int nThreadType)
 		: m_nThreadType(nThreadType)
         , isrunning_(false)
 		, msgTail(nullptr)
     {
 
     }
-    SUV_EXPORT ~CUVThread(void)
+    ~CUVThread(void)
     {
         if (isrunning_) {
             uv_thread_join(&thread_);
@@ -116,15 +116,8 @@ public:
         isrunning_ = false;
     }
 	
-    SUV_EXPORT void Start()
-    {
-        if (isrunning_) {
-            return;
-        }
-        uv_thread_create(&thread_, ThreadFun, this);
-        isrunning_ = true;
-    }
-    SUV_EXPORT void Stop()
+    void Start();
+    void Stop()
     {
         if (!isrunning_) {
             return;
@@ -132,11 +125,11 @@ public:
         uv_thread_join(&thread_);
         isrunning_ = false;
     }
-    SUV_EXPORT int GetThreadID(void) const
+    int GetThreadID(void) const
     {
         return uv_thread_id();
     }
-    SUV_EXPORT bool IsRunning(void) const
+    bool IsRunning(void) const
     {
         return isrunning_;
     }
@@ -145,9 +138,9 @@ public:
 	void PushBackMsg(unsigned int nMsgType, const TYPE &msg, unsigned int nSrcAddr = 0);
 
 protected:
-	virtual SUV_EXPORT void Run();
-	virtual SUV_EXPORT int OnInit();
-	virtual SUV_EXPORT void OnExit();
+	virtual  void Run();
+	virtual  int  OnInit();
+	virtual  void  OnExit();
 
 	template<class TYPE>
 	int SendUvMessage(const TYPE& msg, size_t nMsgType, unsigned int nDstAddr);
@@ -157,11 +150,11 @@ protected:
 		UV_THREAD_BIND(UN_REGIST_THREAD_MSG, unsigned int)
 	END_BASE_UV_THREAD_BIND
 		
-	void SUV_EXPORT OnUvThreadMessage(CRegistMsg msg, unsigned int nSrcAddr);
-	void SUV_EXPORT OnUvThreadMessage(unsigned int msg, unsigned int nSrcAddr);
+	void  OnUvThreadMessage(CRegistMsg msg, unsigned int nSrcAddr);
+	void  OnUvThreadMessage(unsigned int msg, unsigned int nSrcAddr);
 
 private:
-	void SUV_EXPORT PushBackMsg(NodeMsg *msg);  // 这个函数调用的时候注意传递的值
+	void PushBackMsg(NodeMsg *msg);  // 这个函数调用的时候注意传递的值
 	CUVThread(){}
 	static void ThreadFun(void* arg);
 	unsigned int m_nThreadType;

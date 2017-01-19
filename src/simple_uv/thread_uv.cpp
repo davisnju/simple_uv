@@ -76,15 +76,14 @@ void CUVThread::OnUvThreadMessage( unsigned int msg, unsigned int nSrcAddr )
 		m_mapThread.erase(it);
 	}
 }
-
-SUV_EXPORT int CUVThread::OnInit()
+int CUVThread::OnInit()
 {
 	CUVThreadMng::GetInstance()->RegistThread(m_nThreadType, this);
 
 	return 0;
 }
 
-SUV_EXPORT void CUVThread::OnExit()
+void CUVThread::OnExit()
 {
 	CUVThreadMng::GetInstance()->UnRegistThread(m_nThreadType);
 
@@ -94,5 +93,14 @@ SUV_EXPORT void CUVThread::OnExit()
 		m_mapThread.erase(it++);
 	}
 
+}
+
+void CUVThread::Start()
+{
+	if (isrunning_) {
+		return;
+	}
+	uv_thread_create(&thread_, ThreadFun, this);
+	isrunning_ = true;
 }
 

@@ -45,6 +45,9 @@
     <ClInclude Include="simple_locks.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="packet_sync.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="uv_msg_framing.cpp">
@@ -66,6 +69,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="UVThreadMng.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="packet_sync.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

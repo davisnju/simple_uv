@@ -41,7 +41,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)src\libuv\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)src\libuv\include\;$(SolutionDir)src\;$(SolutionDir)src\openssl\include\;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <LibraryPath>$(SolutionDir)lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <IntDir>$(SolutionDir)temp\$(Configuration)\</IntDir>
@@ -88,6 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseMsgDefine.h" />
+    <ClInclude Include="packet_sync.h" />
     <ClInclude Include="simple_locks.h" />
     <ClInclude Include="simple_uv_export.h" />
     <ClInclude Include="tcpclient.h" />
@@ -99,6 +100,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseMsgDefine.cpp" />
+    <ClCompile Include="packet_sync.cpp" />
     <ClCompile Include="tcpclient.cpp" />
     <ClCompile Include="TcpHandle.cpp" />
     <ClCompile Include="tcpserver.cpp" />
