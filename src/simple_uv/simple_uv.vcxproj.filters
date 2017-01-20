@@ -48,6 +48,9 @@
     <ClInclude Include="packet_sync.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="pod_circularbuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="uv_msg_framing.cpp">

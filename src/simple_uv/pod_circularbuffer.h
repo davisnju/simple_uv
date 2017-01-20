@@ -10,8 +10,10 @@
 #define POD_CIRCULAR_BUFFER_H
 #include <assert.h>
 #include <memory.h>
+#include "simple_uv_export.h"
+
 template<typename T>
-class PodCircularBuffer
+class SUV_EXPORT PodCircularBuffer
 {
 public:
     PodCircularBuffer(int capacity)

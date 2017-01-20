@@ -11,7 +11,8 @@
 TCPServer::TCPServer()
 	: m_nStartsSatus(CONNECT_DIS)
 {
-
+	m_mapClientsList = new std::map<int, AcceptClient*>;
+	m_nServerIP = new std::string;
 }
 
 
@@ -20,15 +21,15 @@ TCPServer::~TCPServer()
 	Close();
 	uv_thread_join(&m_startThreadHandle);
 
-	for (auto it = avai_tcphandle_.begin(); it != avai_tcphandle_.end(); ++it) {
+	for (auto it = m_listAvaiTcpHandle.begin(); it != m_listAvaiTcpHandle.end(); ++it) {
 		FreeTcpClientCtx(*it);
 	}
-	avai_tcphandle_.clear();
+	m_listAvaiTcpHandle.clear();
 
-	for (auto it = writeparam_list_.begin(); it != writeparam_list_.end(); ++it) {
+	for (auto it = m_listWriteParam.begin(); it != m_listWriteParam.end(); ++it) {
 		FreeWriteParam(*it);
 	}
-	writeparam_list_.clear();
+	m_listWriteParam.clear();
 	//    // LOGI("tcp server exit.");
 }
 
@@ -45,7 +46,7 @@ void TCPServer::closeinl()
 	}
 
 	uv_mutex_lock(&m_mutexClients);
-	for (auto it = m_mapClientsList.begin(); it != m_mapClientsList.end(); ++it) {
+	for (auto it = m_mapClientsList->begin(); it != m_mapClientsList->end(); ++it) {
 		auto data = it->second;
 		data->Close();
 	}
@@ -92,13 +93,13 @@ bool TCPServer::bind(const char* ip, int port)
 	struct sockaddr_in bind_addr;
 	int iret = uv_ip4_addr(ip, port, &bind_addr);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
 	iret = uv_tcp_bind(&m_tcpHandle, (const struct sockaddr*)&bind_addr, 0);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
@@ -111,13 +112,13 @@ bool TCPServer::bind6(const char* ip, int port)
 	struct sockaddr_in6 bind_addr;
 	int iret = uv_ip6_addr(ip, port, &bind_addr);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
 	iret = uv_tcp_bind(&m_tcpHandle, (const struct sockaddr*)&bind_addr, 0);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
@@ -130,7 +131,7 @@ bool TCPServer::listen(int backlog)
 {
 	int iret = uv_listen((uv_stream_t*) &m_tcpHandle, backlog, AcceptConnection);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
@@ -141,13 +142,13 @@ bool TCPServer::listen(int backlog)
 
 bool TCPServer::Start(const char* ip, int port)
 {
-	m_nServerIP = ip;
+	*m_nServerIP = ip;
 	m_nServerPort = port;
 	closeinl();
 	if (!init()) {
 		return false;
 	}
-	if (!bind(m_nServerIP.c_str(), m_nServerPort)) {
+	if (!bind(m_nServerIP->c_str(), m_nServerPort)) {
 		return false;
 	}
 	if (!listen(SOMAXCONN)) {
@@ -155,7 +156,7 @@ bool TCPServer::Start(const char* ip, int port)
 	}
 	int iret = uv_thread_create(&m_startThreadHandle, StartThread, this);//use thread to wait for start succeed.
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
@@ -172,13 +173,13 @@ bool TCPServer::Start(const char* ip, int port)
 
 bool TCPServer::Start6(const char* ip, int port)
 {
-	m_nServerIP = ip;
+	*m_nServerIP = ip;
 	m_nServerPort = port;
 	closeinl();
 	if (!init()) {
 		return false;
 	}
-	if (!bind6(m_nServerIP.c_str(), m_nServerPort)) {
+	if (!bind6(m_nServerIP->c_str(), m_nServerPort)) {
 		return false;
 	}
 	if (!listen(SOMAXCONN)) {
@@ -186,7 +187,7 @@ bool TCPServer::Start6(const char* ip, int port)
 	}
 	int iret = uv_thread_create(&m_startThreadHandle, StartThread, this);//use thread to wait for start succeed.
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
@@ -221,22 +222,22 @@ void TCPServer::AcceptConnection(uv_stream_t* server, int status)
 	TCPServer* tcpsock = (TCPServer*)server->data;
 	assert(tcpsock);
 	if (status) {
-		tcpsock->m_strErrMsg = GetUVError(status);
+		*(tcpsock->m_strErrMsg) = GetUVError(status);
 		//        // LOGE(tcpsock->errmsg_);
 		return;
 	}
 	TcpClientCtx* tmptcp = NULL;
-	if (tcpsock->avai_tcphandle_.empty()) {
+	if (tcpsock->m_listAvaiTcpHandle.empty()) {
 		tmptcp = AllocTcpClientCtx(tcpsock);
 	} else {
-		tmptcp = tcpsock->avai_tcphandle_.front();
-		tcpsock->avai_tcphandle_.pop_front();
+		tmptcp = tcpsock->m_listAvaiTcpHandle.front();
+		tcpsock->m_listAvaiTcpHandle.pop_front();
 		tmptcp->parent_acceptclient = NULL;
 	}
 	int iret = uv_tcp_init(&tcpsock->m_loop, &tmptcp->tcphandle);
 	if (iret) {
-		tcpsock->avai_tcphandle_.push_back(tmptcp);//Recycle
-		tcpsock->m_strErrMsg = GetUVError(iret);
+		tcpsock->m_listAvaiTcpHandle.push_back(tmptcp);//Recycle
+		*(tcpsock->m_strErrMsg) = GetUVError(iret);
 		//        // LOGE(tcpsock->errmsg_);
 		return;
 	}
@@ -246,8 +247,8 @@ void TCPServer::AcceptConnection(uv_stream_t* server, int status)
 	tmptcp->clientid = clientid;
 	iret = uv_accept((uv_stream_t*)server, (uv_stream_t*)&tmptcp->tcphandle);
 	if (iret) {
-		tcpsock->avai_tcphandle_.push_back(tmptcp);//Recycle
-		tcpsock->m_strErrMsg = GetUVError(iret);
+		tcpsock->m_listAvaiTcpHandle.push_back(tmptcp);//Recycle
+		*(tcpsock->m_strErrMsg) = GetUVError(iret);
 		//        // LOGE(tcpsock->errmsg_);
 		return;
 	}
@@ -256,14 +257,14 @@ void TCPServer::AcceptConnection(uv_stream_t* server, int status)
 	iret = uv_read_start((uv_stream_t*)&tmptcp->tcphandle, AllocBufferForRecv, AfterRecv);
 	if (iret) {
 		uv_close((uv_handle_t*)&tmptcp->tcphandle, TCPServer::RecycleTcpHandle);
-		tcpsock->m_strErrMsg = GetUVError(iret);
+		*(tcpsock->m_strErrMsg) = GetUVError(iret);
 		// LOGE(tcpsock->errmsg_);
 		return;
 	}
 	AcceptClient* cdata = new AcceptClient(tmptcp, clientid, tcpsock->m_cPacketHead, tcpsock->m_cPacketTail, &tcpsock->m_loop); //delete on SubClientClosed
 	cdata->SetClosedCB(TCPServer::SubClientClosed, tcpsock);
 	uv_mutex_lock(&tcpsock->m_mutexClients);
-	tcpsock->m_mapClientsList.insert(std::make_pair(clientid, cdata)); //add accept client
+	tcpsock->m_mapClientsList->insert(std::make_pair(clientid, cdata)); //add accept client
 	uv_mutex_unlock(&tcpsock->m_mutexClients);
 
 	tcpsock->NewConnect(clientid);
@@ -274,8 +275,8 @@ void TCPServer::AcceptConnection(uv_stream_t* server, int status)
 void TCPServer::SetRecvCB(int clientid, ServerRecvCB cb, void* userdata)
 {
 	//     uv_mutex_lock(&mutex_clients_);
-	//     auto itfind = m_mapClientsList.find(clientid);
-	//     if (itfind != m_mapClientsList.end()) {
+	//     auto itfind = m_mapClientsList->find(clientid);
+	//     if (itfind != m_mapClientsList->end()) {
 	//         itfind->second->SetRecvCB(cb, userdata);
 	//     }
 	//     uv_mutex_unlock(&mutex_clients_);
@@ -309,10 +310,10 @@ void TCPServer::RecycleTcpHandle(uv_handle_t* handle)
 	TcpClientCtx* theclass = (TcpClientCtx*)handle->data;
 	assert(theclass);
 	TCPServer* parent = (TCPServer*)theclass->parent_server;
-	if (parent->avai_tcphandle_.size() > MAXLISTSIZE) {
+	if (parent->m_listAvaiTcpHandle.size() > MAXLISTSIZE) {
 		FreeTcpClientCtx(theclass);
 	} else {
-		parent->avai_tcphandle_.push_back(theclass);
+		parent->m_listAvaiTcpHandle.push_back(theclass);
 	}
 }
 
@@ -354,18 +355,18 @@ void TCPServer::SubClientClosed(int clientid, void* userdata)
 {
 	TCPServer* theclass = (TCPServer*)userdata;
 	uv_mutex_lock(&theclass->m_mutexClients);
-	auto itfind = theclass->m_mapClientsList.find(clientid);
-	if (itfind != theclass->m_mapClientsList.end()) {
+	auto itfind = theclass->m_mapClientsList->find(clientid);
+	if (itfind != theclass->m_mapClientsList->end()) {
 		theclass->CloseCB(clientid);
-		if (theclass->avai_tcphandle_.size() > MAXLISTSIZE) {
+		if (theclass->m_listAvaiTcpHandle.size() > MAXLISTSIZE) {
 			FreeTcpClientCtx(itfind->second->GetTcpHandle());
 		} else {
-			theclass->avai_tcphandle_.push_back(itfind->second->GetTcpHandle());
+			theclass->m_listAvaiTcpHandle.push_back(itfind->second->GetTcpHandle());
 		}
 		delete itfind->second;
 		// LOGI("delete client:" << itfind->first);
 		fprintf(stdout, "delete client：%d\n", itfind->first);
-		theclass->m_mapClientsList.erase(itfind);
+		theclass->m_mapClientsList->erase(itfind);
 	}
 	uv_mutex_unlock(&theclass->m_mutexClients);
 }
@@ -398,12 +399,12 @@ bool TCPServer::broadcast(const std::string& senddata, std::vector<int> excludei
 	AcceptClient* pClient = NULL;
 	write_param* writep = NULL;
 	if (excludeid.empty()) {
-		for (auto it = m_mapClientsList.begin(); it != m_mapClientsList.end(); ++it) {
+		for (auto it = m_mapClientsList->begin(); it != m_mapClientsList->end(); ++it) {
 			pClient = it->second;
 			sendinl(senddata, pClient->GetTcpHandle());
 		}
 	} else {
-		for (auto it = m_mapClientsList.begin(); it != m_mapClientsList.end(); ++it) {
+		for (auto it = m_mapClientsList->begin(); it != m_mapClientsList->end(); ++it) {
 			auto itfind = std::find(excludeid.begin(), excludeid.end(), it->first);
 			if (itfind != excludeid.end()) {
 				excludeid.erase(itfind);
@@ -424,11 +425,11 @@ bool TCPServer::sendinl(const std::string& senddata, TcpClientCtx* client)
 		return true;
 	}
 	write_param* writep = NULL;
-	if (writeparam_list_.empty()) {
+	if (m_listWriteParam.empty()) {
 		writep = AllocWriteParam();
 	} else {
-		writep = writeparam_list_.front();
-		writeparam_list_.pop_front();
+		writep = m_listWriteParam.front();
+		m_listWriteParam.pop_front();
 	}
 	if (writep->buf_truelen_ < senddata.length()) {
 		writep->buf_.base = (char*)realloc(writep->buf_.base, senddata.length());
@@ -439,8 +440,8 @@ bool TCPServer::sendinl(const std::string& senddata, TcpClientCtx* client)
 	writep->write_req_.data = client;
 	int iret = uv_write((uv_write_t*)&writep->write_req_, (uv_stream_t*)&client->tcphandle, &writep->buf_, 1, AfterSend);//发送
 	if (iret) {
-		writeparam_list_.push_back(writep);
-		m_strErrMsg = "send data error.";
+		m_listWriteParam.push_back(writep);
+		*m_strErrMsg = "send data error.";
 		// LOGE("client(" << client << ") send error:" << GetUVError(iret));
 		fprintf(stdout, "send error. %s-%s\n", uv_err_name(iret), uv_strerror(iret));
 		return false;
@@ -568,10 +569,10 @@ void AfterSend(uv_write_t* req, int status)
 {
 	TcpClientCtx* theclass = (TcpClientCtx*)req->data;
 	TCPServer* parent = (TCPServer*)theclass->parent_server;
-	if (parent->writeparam_list_.size() > MAXLISTSIZE) {
+	if (parent->m_listWriteParam.size() > MAXLISTSIZE) {
 		FreeWriteParam((write_param*)req);
 	} else {
-		parent->writeparam_list_.push_back((write_param*)req);
+		parent->m_listWriteParam.push_back((write_param*)req);
 	}
 	if (status < 0) {
 		// LOGE("send data error:" << GetUVError(status));

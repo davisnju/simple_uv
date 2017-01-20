@@ -103,27 +103,27 @@ public:
 
 	CUVThread(unsigned int nThreadType)
 		: m_nThreadType(nThreadType)
-        , isrunning_(false)
-		, msgTail(nullptr)
+        , m_bIsRunning(false)
+		, m_pMsgTail(nullptr)
     {
-
+		m_mapThread = new map<unsigned int, CUVThread *>;
     }
     ~CUVThread(void)
     {
-        if (isrunning_) {
-            uv_thread_join(&thread_);
+        if (m_bIsRunning) {
+            uv_thread_join(&m_thread);
         }
-        isrunning_ = false;
+        m_bIsRunning = false;
     }
 	
     void Start();
     void Stop()
     {
-        if (!isrunning_) {
+        if (!m_bIsRunning) {
             return;
         }
-        uv_thread_join(&thread_);
-        isrunning_ = false;
+        uv_thread_join(&m_thread);
+        m_bIsRunning = false;
     }
     int GetThreadID(void) const
     {
@@ -131,7 +131,7 @@ public:
     }
     bool IsRunning(void) const
     {
-        return isrunning_;
+        return m_bIsRunning;
     }
 
 	template<class TYPE>
@@ -158,19 +158,19 @@ private:
 	CUVThread(){}
 	static void ThreadFun(void* arg);
 	unsigned int m_nThreadType;
-    uv_thread_t thread_;
+    uv_thread_t m_thread;
 	CUVRWLock m_lock;
-    bool isrunning_;
-	NodeMsg *msgTail;
-	map<unsigned int, CUVThread *> m_mapThread;
+    bool m_bIsRunning;
+	NodeMsg *m_pMsgTail;
+	map<unsigned int, CUVThread *> *m_mapThread;
 };
 
 template<class TYPE>
 int CUVThread::SendUvMessage( const TYPE& msg, size_t nMsgType, unsigned int nDstAddr )
 {
-	map<unsigned int, CUVThread *>::iterator it = m_mapThread.find(nDstAddr);
+	map<unsigned int, CUVThread *>::iterator it = m_mapThread->find(nDstAddr);
 
-	if (it == m_mapThread.end())
+	if (it == m_mapThread->end())
 	{
 		return -1;
 	}

@@ -89,6 +89,7 @@
   <ItemGroup>
     <ClInclude Include="BaseMsgDefine.h" />
     <ClInclude Include="packet_sync.h" />
+    <ClInclude Include="pod_circularbuffer.h" />
     <ClInclude Include="simple_locks.h" />
     <ClInclude Include="simple_uv_export.h" />
     <ClInclude Include="tcpclient.h" />

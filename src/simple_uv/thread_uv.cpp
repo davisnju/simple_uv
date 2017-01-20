@@ -4,16 +4,16 @@
 void CUVThread::PushBackMsg(NodeMsg *msg)
 {
 	m_lock.WriteLock();
-	if (!msgTail)
+	if (!m_pMsgTail)
 	{
 		msg->next = msg;
-		msgTail = msg;
+		m_pMsgTail = msg;
 	}
 	else
 	{
-		msg->next = msgTail->next;
-		msgTail->next = msg;
-		msgTail = msg;
+		msg->next = m_pMsgTail->next;
+		m_pMsgTail->next = msg;
+		m_pMsgTail = msg;
 	}
 	m_lock.WriteUnLock();
 }
@@ -27,7 +27,7 @@ void CUVThread::ThreadFun(void* arg)
 		pThread->Run();
 	}	
 
-	uv_thread_join(&pThread->thread_);
+	uv_thread_join(&pThread->m_thread);
 }
 
 void CUVThread::Run()
@@ -38,16 +38,16 @@ void CUVThread::Run()
 
 	while (true)
 	{
-		if (msgTail == nullptr)
+		if (m_pMsgTail == nullptr)
 		{
 			uv_thread_sleep(100);
 			continue;
 		}
 
 		m_lock.WriteLock();
-		first = msgTail->next;
+		first = m_pMsgTail->next;
 		next = first;
-		msgTail = nullptr;
+		m_pMsgTail = nullptr;
 		m_lock.WriteUnLock();
 
 		while (next != nullptr) {
@@ -64,16 +64,17 @@ void CUVThread::Run()
 
 void CUVThread::OnUvThreadMessage(CRegistMsg msg, unsigned int nSrcAddr)
 {
-	m_mapThread[msg.m_nType] = (CUVThread *)(msg.m_pData);
+	// m_mapThread[msg.m_nType] = (CUVThread *)(msg.m_pData);
+	m_mapThread->insert(map<unsigned int, CUVThread*>::value_type(msg.m_nType, (CUVThread *)(msg.m_pData)));
 }
 
 void CUVThread::OnUvThreadMessage( unsigned int msg, unsigned int nSrcAddr )
 {
-	map<unsigned int, CUVThread *>::iterator it = m_mapThread.find(msg);
+	map<unsigned int, CUVThread *>::iterator it = m_mapThread->find(msg);
 
-	if (it != m_mapThread.end())
+	if (it != m_mapThread->end())
 	{
-		m_mapThread.erase(it);
+		m_mapThread->erase(it);
 	}
 }
 int CUVThread::OnInit()
@@ -87,20 +88,20 @@ void CUVThread::OnExit()
 {
 	CUVThreadMng::GetInstance()->UnRegistThread(m_nThreadType);
 
-	for (map<unsigned int, CUVThread *>::iterator it = m_mapThread.begin();
-		it != m_mapThread.end(); )
+	for (map<unsigned int, CUVThread *>::iterator it = m_mapThread->begin();
+		it != m_mapThread->end(); )
 	{
-		m_mapThread.erase(it++);
+		m_mapThread->erase(it++);
 	}
 
 }
 
 void CUVThread::Start()
 {
-	if (isrunning_) {
+	if (m_bIsRunning) {
 		return;
 	}
-	uv_thread_create(&thread_, ThreadFun, this);
-	isrunning_ = true;
+	uv_thread_create(&m_thread, ThreadFun, this);
+	m_bIsRunning = true;
 }
 

@@ -11,15 +11,16 @@ CTcpHandle::CTcpHandle()
 	, m_cPacketHead(SERVER_PACKET_HEAD)
 	, m_cPacketTail(SERVER_PACKET_TAIL)
 {
+	m_strErrMsg = new std::string;
 	int iret = uv_loop_init(&m_loop);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
-		fprintf(stdout, "init loop error: %s\n", m_strErrMsg.c_str());
+		*m_strErrMsg = GetUVError(iret);
+		fprintf(stdout, "init loop error: %s\n", m_strErrMsg->c_str());
 	}
 	iret = uv_mutex_init(&m_mutexClients);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
-		fprintf(stdout, "uv_mutex_init error: %s\n", m_strErrMsg.c_str());
+		*m_strErrMsg = GetUVError(iret);
+		fprintf(stdout, "uv_mutex_init error: %s\n", m_strErrMsg->c_str());
 	}
 }
 
@@ -41,7 +42,7 @@ bool  CTcpHandle::SetNoDelay(bool enable)
 {
 	int iret = uv_tcp_nodelay(&m_tcpHandle, enable ? 1 : 0);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
@@ -52,7 +53,7 @@ bool  CTcpHandle::SetKeepAlive(int enable, unsigned int delay)
 {
 	int iret = uv_tcp_keepalive(&m_tcpHandle, enable, delay);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		// // LOGI(errmsg_);
 		return false;
 	}
@@ -66,7 +67,7 @@ bool CTcpHandle::init()
 	}
 	int iret = uv_async_init(&m_loop, &m_asyncHandle, AsyncCloseCB);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
@@ -74,7 +75,7 @@ bool CTcpHandle::init()
 
 	iret = uv_tcp_init(&m_loop, &m_tcpHandle);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
@@ -114,7 +115,7 @@ bool CTcpHandle::run(int status /*= UV_RUN_DEFAULT*/)
 {
 	int iret = uv_run(&m_loop, (uv_run_mode)status);
 	if (iret) {
-		m_strErrMsg = GetUVError(iret);
+		*m_strErrMsg = GetUVError(iret);
 		//        // LOGE(errmsg_);
 		return false;
 	}
@@ -127,8 +128,6 @@ void GetPacket(const NetPacket& packethead, const unsigned char* packetdata, voi
 	assert(userdata);
 	TcpClientCtx* theclass = (TcpClientCtx*)userdata;
 	CTcpHandle* parent = (CTcpHandle*)theclass->parent_server;
-	/*const std::string& senddata = parent->protocol_->ParsePacket(packethead, packetdata);
-	parent->sendinl(senddata, theclass);*/
 	parent->ParsePacket(packethead, packetdata, theclass);
 	return;
 }

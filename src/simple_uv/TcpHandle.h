@@ -6,8 +6,8 @@
 #include "uv.h"
 #include "BaseMsgDefine.h"
 
-
 using namespace std;
+
 
 #define SERVER_PACKET_HEAD 0x01
 #define SERVER_PACKET_TAIL 0x02
@@ -31,9 +31,9 @@ public:
 	CTcpHandle();
 	~CTcpHandle(void);
 
-	virtual void  Close();  //send close command. verify IsClosed for real closed
+	virtual void  Close();    //send close command. verify IsClosed for real closed
 	virtual int  ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
-	bool  IsClosed() {  //verify if real closed
+	bool  IsClosed() {        //verify if real closed
 		return m_bIsClosed;
 	};
 
@@ -45,7 +45,7 @@ public:
 	bool  SetKeepAlive(int enable, unsigned int delay);
 
 	const  char* GetLastErrMsg() const {
-		return m_strErrMsg.c_str();
+		return m_strErrMsg->c_str();
 	};
 
 protected:
@@ -64,7 +64,7 @@ protected:
 	uv_async_t m_asyncHandle;
 	uv_tcp_t m_tcpHandle;
 	uv_loop_t m_loop;
-	std::string m_strErrMsg;
+	std::string *m_strErrMsg;
 	uv_mutex_t m_mutexClients;  //clients map mutex
 
 	enum {
