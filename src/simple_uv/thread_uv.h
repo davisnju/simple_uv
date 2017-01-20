@@ -15,6 +15,7 @@ using namespace std;
 #include "simple_uv_export.h"
 #include "BaseMsgDefine.h"
 #include "simple_locks.h"
+#include "uv_msg_framing.h"
 
 //对Android平台，也认为是linux
 #ifdef ANDROID
@@ -90,16 +91,6 @@ inline SUV_EXPORT std::string GetUVError(int errcode)
 class SUV_EXPORT CUVThread
 {
 public:
-	struct NodeMsg
-	{
-		unsigned int m_nMsgType;
-		unsigned int m_nSrcAddr;
-		void *m_pData;
-		NodeMsg *next;
-		~NodeMsg() {
-			next = nullptr;
-		}
-	};
 
 	CUVThread(unsigned int nThreadType)
 		: m_nThreadType(nThreadType)
@@ -152,12 +143,12 @@ protected:
 		
 	void  OnUvThreadMessage(CRegistMsg msg, unsigned int nSrcAddr);
 	void  OnUvThreadMessage(unsigned int msg, unsigned int nSrcAddr);
+	unsigned int m_nThreadType;
 
 private:
 	void PushBackMsg(NodeMsg *msg);  // 这个函数调用的时候注意传递的值
 	CUVThread(){}
 	static void ThreadFun(void* arg);
-	unsigned int m_nThreadType;
     uv_thread_t m_thread;
 	CUVMutex m_lock;
     bool m_bIsRunning;

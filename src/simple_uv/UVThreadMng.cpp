@@ -62,12 +62,23 @@ void CUVThreadMng::UnRegistThread(unsigned int nType)
 }
 
 CUVThreadMng::CUVThreadMng()
+	: m_pHandleAsync(nullptr)
 {
 }
 
 
 CUVThreadMng::~CUVThreadMng()
 {
+}
+
+void CUVThreadMng::RegistHandle( uv_async_t *handle )
+{
+	m_pHandleAsync = handle;
+}
+
+void CUVThreadMng::UnRegistHandle()
+{
+	m_pHandleAsync = nullptr;
 }
 
 

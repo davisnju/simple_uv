@@ -5,7 +5,7 @@
 #include "uv.h"
 #include "simple_uv_export.h"
 
-//互斥量，配合CUVAutoLock使用更方便
+// 互斥量，配合CUVAutoLock使用更方便
 class SUV_EXPORT CUVMutex
 {
 public:
@@ -33,9 +33,9 @@ private:
 	uv_mutex_t mut_;
 	friend class CUVCond;
 	friend class CUVAutoLock;
-private://private中，禁止复制和赋值
-	CUVMutex(const CUVMutex&);//不实现
-	CUVMutex& operator =(const CUVMutex&);//不实现
+private:  // private中，禁止复制和赋值
+	CUVMutex(const CUVMutex&);             // 不实现
+	CUVMutex& operator =(const CUVMutex&); // 不实现
 };
 
 class SUV_EXPORT CUVAutoLock
@@ -55,9 +55,9 @@ public:
 	}
 private:
 	uv_mutex_t* mut_;
-private://private中，禁止复制和赋值
-	CUVAutoLock(const CUVAutoLock&);//不实现
-	CUVAutoLock& operator =(const CUVAutoLock&);//不实现
+private:                                   // private中，禁止复制和赋值
+	CUVAutoLock(const CUVAutoLock&);       // 不实现
+	CUVAutoLock& operator =(const CUVAutoLock&);  // 不实现
 };
 
 //条件变量
@@ -98,12 +98,12 @@ public:
 	}
 private:
 	uv_cond_t cond_;
-private://private中，禁止复制和赋值
-	CUVCond(const CUVCond&);//不实现
-	CUVCond& operator =(const CUVCond&);//不实现
+private:                                   // private中，禁止复制和赋值
+	CUVCond(const CUVCond&);               // 不实现
+	CUVCond& operator =(const CUVCond&);   // 不实现
 };
 
-//信号量
+// 信号量
 class SUV_EXPORT CUVSem
 {
 public:
@@ -129,12 +129,12 @@ public:
 	}
 private:
 	uv_sem_t sem_;
-private://private中，禁止复制和赋值
-	CUVSem(const CUVSem&);//不实现
-	CUVSem& operator =(const CUVSem&);//不实现
+private:                               // private中，禁止复制和赋值
+	CUVSem(const CUVSem&);             // 不实现
+	CUVSem& operator =(const CUVSem&); // 不实现
 };
 
-//读写锁
+// 读写锁
 class SUV_EXPORT CUVRWLock
 {
 public:

@@ -25,6 +25,23 @@ using namespace std;
 			return BASE_CLASS::ParsePacket(packet, buf, pClient); \
 	} \
 
+
+#define BEGIN_UV_THREAD_BIND virtual void OnDispatchMsg(unsigned int nMsgType, void *data, unsigned int nSrcAddr) \
+{ \
+
+#define UV_THREAD_BIND(MsgType, MSG_CLASS) \
+	if (MsgType == nMsgType) \
+{ \
+	MSG_CLASS *pMsg = (MSG_CLASS *)data; \
+	this->OnUvThreadMessage(*pMsg, nSrcAddr); \
+	delete pMsg; pMsg = nullptr; return ; \
+} \
+
+#define END_UV_THREAD_BIND(BASE_CLASS) return BASE_CLASS::OnDispatchMsg(nMsgType, data, nSrcAddr); \
+} \
+
+#define END_BASE_UV_THREAD_BIND return ; } \
+
 class SUV_EXPORT CTcpHandle
 {
 public:
@@ -49,7 +66,10 @@ public:
 	};
 
 protected:
+	BEGIN_UV_THREAD_BIND
+	END_BASE_UV_THREAD_BIND
 	virtual bool init();
+	virtual void OnExit();
 	virtual void  send_inl(uv_write_t* req = NULL);  //real send data fun
 	virtual void closeinl();  //real close fun
 	bool run(int status = UV_RUN_DEFAULT);
@@ -62,6 +82,7 @@ protected:
 	char m_cPacketHead;  //protocol head
 	char m_cPacketTail;  //protocol tail
 	uv_async_t m_asyncHandle;
+	uv_async_t m_asyncHandleForRecvMsg;
 	uv_tcp_t m_tcpHandle;
 	uv_loop_t m_loop;
 	std::string *m_strErrMsg;
@@ -75,8 +96,8 @@ protected:
 	};
 
 private:
-	static void AsyncCloseCB(uv_async_t* handle);//async close
-	
+	static void AsyncCloseCB(uv_async_t* handle);  //async close
+	static void AsyncRecvMsg(uv_async_t* handle);  //async close	
 };
 
 template<class TYPE>

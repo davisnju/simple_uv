@@ -62,6 +62,24 @@ struct SUV_EXPORT uv_msg_write_s {
    int msg_size;     /* in network order! */
 };
 
+struct uv_msg_thread_2_handle
+{
+	void *m_pClass;
+	void *m_pData;
+};
+
+
+struct NodeMsg
+{
+	unsigned int m_nMsgType;
+	unsigned int m_nSrcAddr;
+	void *m_pData;
+	NodeMsg *next;
+	~NodeMsg() {
+		next = nullptr;
+	}
+};
+
 
 #ifdef __cplusplus
 }

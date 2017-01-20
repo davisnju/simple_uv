@@ -1,5 +1,6 @@
 #include "thread_uv.h"
 #include "UVThreadMng.h"
+#include "uv_msg_framing.h"
 
 void CUVThread::PushBackMsg(NodeMsg *msg)
 {
