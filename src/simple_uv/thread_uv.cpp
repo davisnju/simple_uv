@@ -3,7 +3,7 @@
 
 void CUVThread::PushBackMsg(NodeMsg *msg)
 {
-	m_lock.WriteLock();
+	m_lock.Lock();
 	if (!m_pMsgTail)
 	{
 		msg->next = msg;
@@ -15,7 +15,7 @@ void CUVThread::PushBackMsg(NodeMsg *msg)
 		m_pMsgTail->next = msg;
 		m_pMsgTail = msg;
 	}
-	m_lock.WriteUnLock();
+	m_lock.UnLock();
 }
 
 void CUVThread::ThreadFun(void* arg)
@@ -44,11 +44,11 @@ void CUVThread::Run()
 			continue;
 		}
 
-		m_lock.WriteLock();
+		m_lock.Lock();
 		first = m_pMsgTail->next;
 		next = first;
 		m_pMsgTail = nullptr;
-		m_lock.WriteUnLock();
+		m_lock.UnLock();
 
 		while (next != nullptr) {
 			req = next;
@@ -64,7 +64,6 @@ void CUVThread::Run()
 
 void CUVThread::OnUvThreadMessage(CRegistMsg msg, unsigned int nSrcAddr)
 {
-	// m_mapThread[msg.m_nType] = (CUVThread *)(msg.m_pData);
 	m_mapThread->insert(map<unsigned int, CUVThread*>::value_type(msg.m_nType, (CUVThread *)(msg.m_pData)));
 }
 

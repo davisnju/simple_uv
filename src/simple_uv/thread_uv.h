@@ -159,7 +159,7 @@ private:
 	static void ThreadFun(void* arg);
 	unsigned int m_nThreadType;
     uv_thread_t m_thread;
-	CUVRWLock m_lock;
+	CUVMutex m_lock;
     bool m_bIsRunning;
 	NodeMsg *m_pMsgTail;
 	map<unsigned int, CUVThread *> *m_mapThread;
