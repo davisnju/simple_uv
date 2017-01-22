@@ -1,5 +1,6 @@
 #include "TestGateWay.h"
 #include "UVThreadMng.h"
+#include "LogMng.h"
 
 
 CTestGateWay::CTestGateWay()
@@ -24,11 +25,12 @@ int CTestGateWay::OnUvMessage(const CTestMsg &msg, TcpClientCtx *pClient)
 
 void CTestGateWay::OnUvThreadMessage( CTestMsg msg, unsigned int nSrcAddr )
 {
-	map<int, TcpClientCtx *>::iterator it = m_mapSession.find(msg.m_nSessionID);
+	LOGI("msg.m_nTimes = " << msg.m_nTimes);
+	/*map<int, TcpClientCtx *>::iterator it = m_mapSession.find(msg.m_nSessionID);
 
 	if (it != m_mapSession.end())
 	{
 		this->SendUvMessage(msg, msg.MSG_ID, it->second);
 		m_mapSession.erase(it);
-	}
+	}*/
 }

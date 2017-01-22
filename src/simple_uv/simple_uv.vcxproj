@@ -54,7 +54,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SIMPLE_UV_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SIMPLE_UV_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
@@ -88,6 +88,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseMsgDefine.h" />
+    <ClInclude Include="log4z.h" />
+    <ClInclude Include="LogMng.h" />
     <ClInclude Include="packet_sync.h" />
     <ClInclude Include="pod_circularbuffer.h" />
     <ClInclude Include="simple_locks.h" />
@@ -95,16 +97,20 @@
     <ClInclude Include="tcpclient.h" />
     <ClInclude Include="TcpHandle.h" />
     <ClInclude Include="tcpserver.h" />
+    <ClInclude Include="ThreadMsgBase.h" />
     <ClInclude Include="thread_uv.h" />
     <ClInclude Include="UVThreadMng.h" />
     <ClInclude Include="uv_msg_framing.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseMsgDefine.cpp" />
+    <ClCompile Include="log4z.cpp" />
+    <ClCompile Include="LogMng.cpp" />
     <ClCompile Include="packet_sync.cpp" />
     <ClCompile Include="tcpclient.cpp" />
     <ClCompile Include="TcpHandle.cpp" />
     <ClCompile Include="tcpserver.cpp" />
+    <ClCompile Include="ThreadMsgBase.cpp" />
     <ClCompile Include="thread_uv.cpp" />
     <ClCompile Include="UVThreadMng.cpp" />
     <ClCompile Include="uv_msg_framing.cpp" />

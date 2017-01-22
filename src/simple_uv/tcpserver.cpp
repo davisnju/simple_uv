@@ -1,6 +1,7 @@
 ﻿// #include "stdafx.h"
 #include "tcpserver.h"
 #include "thread_uv.h"
+#include "LogMng.h"
 #include <assert.h>
 // #include "log4z.h"
 #define MAXLISTSIZE 20
@@ -13,6 +14,7 @@ TCPServer::TCPServer()
 {
 	m_mapClientsList = new std::map<int, AcceptClient*>;
 	m_nServerIP = new std::string;
+	CLogMng::GetInstance();
 }
 
 

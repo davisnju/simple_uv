@@ -16,6 +16,7 @@ using namespace std;
 #include "BaseMsgDefine.h"
 #include "simple_locks.h"
 #include "uv_msg_framing.h"
+#include "ThreadMsgBase.h"
 
 //对Android平台，也认为是linux
 #ifdef ANDROID
@@ -30,20 +31,7 @@ using namespace std;
 #include <unistd.h>
 #endif
 
-//函数
-#if defined (WIN32) || defined(_WIN32)
-#define uv_thread_close(t) (CloseHandle(t)!=FALSE)
-#define uv_thread_sleep(ms) Sleep(ms);//睡眠ms毫秒
-#define uv_thread_id GetCurrentThreadId//得到当前线程句柄
 
-#elif defined(__linux__)
-#define uv_thread_close(t) ()
-#define uv_thread_sleep(ms) usleep((ms) * 1000)
-#define uv_thread_id pthread_self//得到当前线程句柄
-
-#else
-#error "no supported os"
-#endif
 
 /*****************************
 * @brief   获取libuv错误码对应的错误信息
@@ -72,30 +60,14 @@ inline SUV_EXPORT std::string GetUVError(int errcode)
 }
 
 
-#define BEGIN_UV_THREAD_BIND virtual void OnDispatchMsg(unsigned int nMsgType, void *data, unsigned int nSrcAddr) \
-	{ \
 
-#define UV_THREAD_BIND(MsgType, MSG_CLASS) \
-		if (MsgType == nMsgType) \
-		{ \
-			MSG_CLASS *pMsg = (MSG_CLASS *)data; \
-			this->OnUvThreadMessage(*pMsg, nSrcAddr); \
-			delete pMsg; pMsg = nullptr; return ; \
-		} \
-
-#define END_UV_THREAD_BIND(BASE_CLASS) return BASE_CLASS::OnDispatchMsg(nMsgType, data, nSrcAddr); \
-	} \
-
-#define END_BASE_UV_THREAD_BIND return ; } \
-
-class SUV_EXPORT CUVThread
+class SUV_EXPORT CUVThread : public CThreadMsgBase
 {
 public:
 
 	CUVThread(unsigned int nThreadType)
 		: m_nThreadType(nThreadType)
         , m_bIsRunning(false)
-		, m_pMsgTail(nullptr)
     {
 		m_mapThread = new map<unsigned int, CUVThread *>;
     }
@@ -125,8 +97,7 @@ public:
         return m_bIsRunning;
     }
 
-	template<class TYPE>
-	void PushBackMsg(unsigned int nMsgType, const TYPE &msg, unsigned int nSrcAddr = 0);
+	
 
 protected:
 	virtual  void Run();
@@ -139,20 +110,17 @@ protected:
 	BEGIN_UV_THREAD_BIND
 		UV_THREAD_BIND(CRegistMsg::MSG_ID, CRegistMsg)
 		UV_THREAD_BIND(UN_REGIST_THREAD_MSG, unsigned int)
-	END_BASE_UV_THREAD_BIND
+	END_UV_THREAD_BIND(CThreadMsgBase)
 		
 	void  OnUvThreadMessage(CRegistMsg msg, unsigned int nSrcAddr);
 	void  OnUvThreadMessage(unsigned int msg, unsigned int nSrcAddr);
 	unsigned int m_nThreadType;
 
 private:
-	void PushBackMsg(NodeMsg *msg);  // 这个函数调用的时候注意传递的值
 	CUVThread(){}
 	static void ThreadFun(void* arg);
     uv_thread_t m_thread;
-	CUVMutex m_lock;
     bool m_bIsRunning;
-	NodeMsg *m_pMsgTail;
 	map<unsigned int, CUVThread *> *m_mapThread;
 };
 
@@ -171,16 +139,5 @@ int CUVThread::SendUvMessage( const TYPE& msg, size_t nMsgType, unsigned int nDs
 	return 0;
 }
 
-template<class TYPE>
-void CUVThread::PushBackMsg(unsigned int nMsgType, const TYPE &msg, unsigned int nSrcAddr)
-{
-	NodeMsg *pMsg = new NodeMsg;
-	pMsg->m_nMsgType = nMsgType;
-	pMsg->m_nSrcAddr = nSrcAddr;
-	TYPE *pData = new TYPE(msg);
-	pMsg->m_pData = pData;
-
-	this->PushBackMsg(pMsg);
-}
 
 #endif //COMMON_THREAD_UV_H

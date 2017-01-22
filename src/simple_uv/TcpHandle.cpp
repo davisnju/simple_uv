@@ -76,12 +76,9 @@ bool CTcpHandle::init()
 	m_asyncHandle.data = this;
 
 	uv_async_init(&m_loop, &m_asyncHandleForRecvMsg, AsyncRecvMsg);
-	uv_msg_thread_2_handle *pData = new uv_msg_thread_2_handle;
-	pData->m_pClass = this;
-	pData->m_pData = nullptr;
-	m_asyncHandleForRecvMsg.data = pData;
+	m_asyncHandleForRecvMsg.data = this;
 
-	CUVThreadMng::GetInstance()->RegistHandle(&m_asyncHandleForRecvMsg);
+	CUVThreadMng::GetInstance()->RegistHandle(&m_asyncHandleForRecvMsg, this);
 
 	iret = uv_tcp_init(&m_loop, &m_tcpHandle);
 	if (iret) {
@@ -136,27 +133,17 @@ bool CTcpHandle::run(int status /*= UV_RUN_DEFAULT*/)
 
 void CTcpHandle::AsyncRecvMsg( uv_async_t* handle )
 {
-	uv_msg_thread_2_handle* pData = (uv_msg_thread_2_handle*)handle->data;
+	CTcpHandle* pClass = (CTcpHandle*)handle->data;
 
-	if (!pData->m_pData || !pData->m_pClass)
-	{
-		return;
-	}
-
-	CTcpHandle* pClass = (CTcpHandle*)pData->m_pClass;
-	NodeMsg *req = (NodeMsg *)pData->m_pData;
-
-	pClass->OnDispatchMsg(req->m_nMsgType, req->m_pData, req->m_nSrcAddr);
-
-	delete req;
-	req = nullptr;
-	pData->m_pData = nullptr;
+	pClass->DispatchThreadMsg();
 }
+
 
 void CTcpHandle::OnExit()
 {
 	CUVThreadMng::GetInstance()->UnRegistHandle();
 }
+
 
 void GetPacket(const NetPacket& packethead, const unsigned char* packetdata, void* userdata)
 {

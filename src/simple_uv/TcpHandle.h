@@ -5,6 +5,8 @@
 #include "simple_uv_export.h"
 #include "uv.h"
 #include "BaseMsgDefine.h"
+#include "uv_msg_framing.h"
+#include "ThreadMsgBase.h"
 
 using namespace std;
 
@@ -26,23 +28,7 @@ using namespace std;
 	} \
 
 
-#define BEGIN_UV_THREAD_BIND virtual void OnDispatchMsg(unsigned int nMsgType, void *data, unsigned int nSrcAddr) \
-{ \
-
-#define UV_THREAD_BIND(MsgType, MSG_CLASS) \
-	if (MsgType == nMsgType) \
-{ \
-	MSG_CLASS *pMsg = (MSG_CLASS *)data; \
-	this->OnUvThreadMessage(*pMsg, nSrcAddr); \
-	delete pMsg; pMsg = nullptr; return ; \
-} \
-
-#define END_UV_THREAD_BIND(BASE_CLASS) return BASE_CLASS::OnDispatchMsg(nMsgType, data, nSrcAddr); \
-} \
-
-#define END_BASE_UV_THREAD_BIND return ; } \
-
-class SUV_EXPORT CTcpHandle
+class SUV_EXPORT CTcpHandle : public CThreadMsgBase
 {
 public:
 	CTcpHandle();
@@ -64,10 +50,10 @@ public:
 	const  char* GetLastErrMsg() const {
 		return m_strErrMsg->c_str();
 	};
-
+	
 protected:
 	BEGIN_UV_THREAD_BIND
-	END_BASE_UV_THREAD_BIND
+	END_UV_THREAD_BIND(CThreadMsgBase)
 	virtual bool init();
 	virtual void OnExit();
 	virtual void  send_inl(uv_write_t* req = NULL);  //real send data fun

@@ -51,6 +51,15 @@
     <ClInclude Include="pod_circularbuffer.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="log4z.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LogMng.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadMsgBase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="uv_msg_framing.cpp">
@@ -75,6 +84,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="packet_sync.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="log4z.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LogMng.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadMsgBase.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
