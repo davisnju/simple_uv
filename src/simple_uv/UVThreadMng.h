@@ -2,12 +2,12 @@
 #define UV_THREAD_MNG_H_34525634543
 
 #include <map>
-#include "thread_uv.h"
-#include "simple_uv_export.h"
+#include "UVThread.h"
+#include "SimpleUVExport.h"
 #include "TcpHandle.h"
 using namespace std;
 
-class CTcpHandle;
+class CTCPHandle;
 
 class  CUVThreadMng
 {
@@ -16,7 +16,7 @@ public:
 	static SUV_EXPORT CUVThreadMng* GetInstance();
 	void RegistThread(unsigned int nType, CUVThread *pThread);
 	void UnRegistThread(unsigned int nType);
-	void RegistHandle(uv_async_t *handle, CTcpHandle *pHandle);
+	void RegistHandle(uv_async_t *handle, CTCPHandle *pHandle);
 	void UnRegistHandle();
 
 	template<class TYPE>
@@ -51,7 +51,7 @@ private:
 	CUVThreadMng();
 	~CUVThreadMng();
 	uv_async_t *m_pHandleAsync;
-	CTcpHandle *m_pHandle;
+	CTCPHandle *m_pHandle;
 	map<unsigned int, CUVThread *> m_mapThread;
 	CUVRWLock            m_lock;
 	static CUVThreadMng* m_pMng;

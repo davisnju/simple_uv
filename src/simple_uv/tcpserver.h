@@ -8,8 +8,8 @@
 #include <map>
 #include <vector>
 #include "uv.h"
-#include "packet_sync.h"
-#include "simple_uv_export.h"
+#include "PacketSync.h"
+#include "SimpleUVExport.h"
 #include "BaseMsgDefine.h"
 #include "TcpHandle.h"
 #ifndef BUFFER_SIZE
@@ -22,11 +22,11 @@ class AcceptClient;
 template  class SUV_EXPORT std::list<TcpClientCtx*>;
 template  class SUV_EXPORT std::list<write_param*>;
 
-class SUV_EXPORT TCPServer : public CTcpHandle
+class SUV_EXPORT CTCPServer : public CTCPHandle
 {
 public:
-	TCPServer();
-	virtual ~TCPServer();
+	CTCPServer();
+	virtual ~CTCPServer();
 
 	static void  StartLog(const char* logpath = nullptr);
 	static void  StopLog();
@@ -80,7 +80,7 @@ private:
 };
 
 template<class TYPE>
-int TCPServer::SendUvMessage(const TYPE& msg, size_t nMsgType, TcpClientCtx *pClient)
+int CTCPServer::SendUvMessage(const TYPE& msg, size_t nMsgType, TcpClientCtx *pClient)
 {
 	return this->sendinl(this->PacketData(msg, nMsgType), pClient); 
 }

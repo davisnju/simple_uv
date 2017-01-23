@@ -10,18 +10,18 @@
 #define POD_CIRCULAR_BUFFER_H
 #include <assert.h>
 #include <memory.h>
-#include "simple_uv_export.h"
+#include "SimpleUVExport.h"
 
 template<typename T>
-class SUV_EXPORT PodCircularBuffer
+class SUV_EXPORT CPodCircularBuffer
 {
 public:
-    PodCircularBuffer(int capacity)
+    CPodCircularBuffer(int capacity)
         :m_nBufSize(capacity),m_nReadPos(0),m_nWritePos(0)
         ,m_bEmpty(true),m_bFull(false) {
         m_pBuf = new T[m_nBufSize];
     }
-    virtual ~PodCircularBuffer() {
+    virtual ~CPodCircularBuffer() {
         delete[] m_pBuf;
     }
 
@@ -225,8 +225,8 @@ private:
     int m_nReadPos;
     int m_nWritePos;
 private://Noncopyable
-    PodCircularBuffer(const PodCircularBuffer&);
-    const PodCircularBuffer& operator=(const PodCircularBuffer&);
+    CPodCircularBuffer(const CPodCircularBuffer&);
+    const CPodCircularBuffer& operator=(const CPodCircularBuffer&);
 };
 #endif // POD_CIRCULAR_BUFFER_H
 

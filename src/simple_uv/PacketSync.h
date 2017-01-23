@@ -6,7 +6,8 @@
 #include <algorithm>
 #include "openssl/md5.h"
 #include "net_base.h"
-#include "simple_locks.h"//for GetUVError
+#include "SimpleLocks.h"//for GetUVError
+
 #if defined (WIN32) || defined(_WIN32)
 #include <windows.h>
 #define ThreadSleep(ms) Sleep(ms);//睡眠ms毫秒
@@ -22,6 +23,7 @@
 #pragma comment(lib,"libeay32MDd.lib")
 #endif
 #endif
+
 typedef void (*GetFullPacket)(const NetPacket& packethead, const unsigned char* packetdata, void* userdata);
 
 #ifndef BUFFER_SIZE
@@ -29,10 +31,10 @@ typedef void (*GetFullPacket)(const NetPacket& packethead, const unsigned char* 
 #endif
 
 
-class SUV_EXPORT PacketSync
+class SUV_EXPORT CPacketSync
 {
 public:
-    PacketSync(): packet_cb_(NULL), packetcb_userdata_(NULL) {
+    CPacketSync(): packet_cb_(NULL), packetcb_userdata_(NULL) {
         thread_readdata = uv_buf_init((char*)malloc(BUFFER_SIZE), BUFFER_SIZE); //负责从circulebuffer_读取数据
         thread_packetdata = uv_buf_init((char*)malloc(BUFFER_SIZE), BUFFER_SIZE); //负责从circulebuffer_读取packet 中data部分
         truepacketlen = 0;//readdata有效数据长度
@@ -41,7 +43,7 @@ public:
         parsetype = PARSE_NOTHING;
         getdatalen = 0;
     }
-    virtual ~PacketSync() {
+    virtual ~CPacketSync() {
         free(thread_readdata.base);
         free(thread_packetdata.base);
     }
@@ -79,8 +81,8 @@ private:
     NetPacket theNexPacket;
     unsigned char md5str[MD5_DIGEST_LENGTH];
 private:// no copy
-    PacketSync(const PacketSync&);
-    PacketSync& operator = (const PacketSync&);
+    CPacketSync(const CPacketSync&);
+    CPacketSync& operator = (const CPacketSync&);
 };
 
 /***********************************************辅助函数***************************************************/

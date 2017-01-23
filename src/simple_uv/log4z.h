@@ -196,7 +196,7 @@
 #include <queue>
 #include <deque>
 
-#include "simple_uv_export.h"
+#include "SimpleUVExport.h"
 
 
 //! logger ID type. DO NOT TOUCH

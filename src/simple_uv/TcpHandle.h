@@ -2,10 +2,10 @@
 #define TCP_HANDLE_H_23432358247985439
 
 #include <string>
-#include "simple_uv_export.h"
+#include "SimpleUVExport.h"
 #include "uv.h"
 #include "BaseMsgDefine.h"
-#include "uv_msg_framing.h"
+#include "UVMsgFraming.h"
 #include "ThreadMsgBase.h"
 
 using namespace std;
@@ -28,11 +28,11 @@ using namespace std;
 	} \
 
 
-class SUV_EXPORT CTcpHandle : public CThreadMsgBase
+class SUV_EXPORT CTCPHandle : public CThreadMsgBase
 {
 public:
-	CTcpHandle();
-	~CTcpHandle(void);
+	CTCPHandle();
+	~CTCPHandle(void);
 
 	virtual void  Close();    //send close command. verify IsClosed for real closed
 	virtual int  ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient);
@@ -87,7 +87,7 @@ private:
 };
 
 template<class TYPE>
-string CTcpHandle::PacketData(const TYPE& msg, size_t nMsgType)
+string CTCPHandle::PacketData(const TYPE& msg, size_t nMsgType)
 {
 	NetPacket tmppack;
 	tmppack.type = nMsgType;

@@ -1,12 +1,12 @@
 #pragma once
 #include "uv.h"
-#include "packet_sync.h"
+#include "PacketSync.h"
 
 
 // class AcceptClient;
 typedef struct _tcpclient_ctx {
 	uv_tcp_t tcphandle;//data filed store this
-	PacketSync* packet_;//userdata filed storethis
+	CPacketSync* packet_;//userdata filed storethis
 	uv_buf_t read_buf_;
 	int clientid;
 	void* parent_server;//tcpserver

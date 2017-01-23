@@ -90,30 +90,30 @@
     <ClInclude Include="BaseMsgDefine.h" />
     <ClInclude Include="log4z.h" />
     <ClInclude Include="LogMng.h" />
-    <ClInclude Include="packet_sync.h" />
-    <ClInclude Include="pod_circularbuffer.h" />
-    <ClInclude Include="simple_locks.h" />
-    <ClInclude Include="simple_uv_export.h" />
-    <ClInclude Include="tcpclient.h" />
-    <ClInclude Include="TcpHandle.h" />
-    <ClInclude Include="tcpserver.h" />
+    <ClInclude Include="PacketSync.h" />
+    <ClInclude Include="PodCircularBuffer.h" />
+    <ClInclude Include="SimpleLocks.h" />
+    <ClInclude Include="SimpleUVExport.h" />
+    <ClInclude Include="TCPClient.h" />
+    <ClInclude Include="TCPHandle.h" />
+    <ClInclude Include="TCPServer.h" />
     <ClInclude Include="ThreadMsgBase.h" />
-    <ClInclude Include="thread_uv.h" />
+    <ClInclude Include="UVThread.h" />
     <ClInclude Include="UVThreadMng.h" />
-    <ClInclude Include="uv_msg_framing.h" />
+    <ClInclude Include="UVMsgFraming.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseMsgDefine.cpp" />
     <ClCompile Include="log4z.cpp" />
     <ClCompile Include="LogMng.cpp" />
-    <ClCompile Include="packet_sync.cpp" />
-    <ClCompile Include="tcpclient.cpp" />
-    <ClCompile Include="TcpHandle.cpp" />
-    <ClCompile Include="tcpserver.cpp" />
+    <ClCompile Include="PacketSync.cpp" />
+    <ClCompile Include="TCPClient.cpp" />
+    <ClCompile Include="TCPHandle.cpp" />
+    <ClCompile Include="TCPServer.cpp" />
     <ClCompile Include="ThreadMsgBase.cpp" />
-    <ClCompile Include="thread_uv.cpp" />
+    <ClCompile Include="UVThread.cpp" />
     <ClCompile Include="UVThreadMng.cpp" />
-    <ClCompile Include="uv_msg_framing.cpp" />
+    <ClCompile Include="UVMsgFraming.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

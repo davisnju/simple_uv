@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include "uv.h"
-#include "simple_uv_export.h"
+#include "SimpleUVExport.h"
 
 
 typedef struct SUV_EXPORT uv_msg_s        uv_msg_t;

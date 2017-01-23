@@ -12,10 +12,10 @@
 #include <map>
 #include "uv.h"
 using namespace std;
-#include "simple_uv_export.h"
+#include "SimpleUVExport.h"
 #include "BaseMsgDefine.h"
-#include "simple_locks.h"
-#include "uv_msg_framing.h"
+#include "SimpleLocks.h"
+#include "UVMsgFraming.h"
 #include "ThreadMsgBase.h"
 
 //对Android平台，也认为是linux

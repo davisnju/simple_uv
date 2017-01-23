@@ -72,7 +72,7 @@ CUVThreadMng::~CUVThreadMng()
 {
 }
 
-void CUVThreadMng::RegistHandle( uv_async_t *handle, CTcpHandle *pHandle)
+void CUVThreadMng::RegistHandle( uv_async_t *handle, CTCPHandle *pHandle)
 {
 	m_pHandleAsync = handle;
 	m_pHandle = pHandle;

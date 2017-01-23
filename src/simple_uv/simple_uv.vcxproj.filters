@@ -18,37 +18,10 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="simple_uv_export.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="uv_msg_framing.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="tcpserver.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="thread_uv.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="tcpclient.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="BaseMsgDefine.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="TcpHandle.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="UVThreadMng.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="simple_locks.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="packet_sync.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="pod_circularbuffer.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="log4z.h">
@@ -60,30 +33,39 @@
     <ClInclude Include="ThreadMsgBase.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="TCPHandle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketSync.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PodCircularBuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleLocks.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TCPClient.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TCPServer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UVThread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UVMsgFraming.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleUVExport.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="uv_msg_framing.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="tcpserver.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="tcpclient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="BaseMsgDefine.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="TcpHandle.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="thread_uv.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="UVThreadMng.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="packet_sync.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="log4z.cpp">
@@ -93,6 +75,24 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ThreadMsgBase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TCPHandle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PacketSync.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TCPClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TCPServer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UVThread.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UVMsgFraming.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

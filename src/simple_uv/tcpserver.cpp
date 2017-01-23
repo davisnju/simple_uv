@@ -1,6 +1,6 @@
 ﻿// #include "stdafx.h"
 #include "tcpserver.h"
-#include "thread_uv.h"
+#include "UVThread.h"
 #include "LogMng.h"
 #include <assert.h>
 // #include "log4z.h"
@@ -9,16 +9,15 @@
 
 
 /*****************************************TCP Server*************************************************************/
-TCPServer::TCPServer()
+CTCPServer::CTCPServer()
 	: m_nStartsSatus(CONNECT_DIS)
 {
 	m_mapClientsList = new std::map<int, AcceptClient*>;
 	m_nServerIP = new std::string;
-	CLogMng::GetInstance();
 }
 
 
-TCPServer::~TCPServer()
+CTCPServer::~CTCPServer()
 {
 	Close();
 	uv_thread_join(&m_startThreadHandle);
@@ -35,13 +34,13 @@ TCPServer::~TCPServer()
 	//    // LOGI("tcp server exit.");
 }
 
-bool TCPServer::init()
+bool CTCPServer::init()
 {
-	CTcpHandle::init();
+	CTCPHandle::init();
 	return uv_tcp_nodelay(&m_tcpHandle,  1) == 0;
 }
 
-void TCPServer::closeinl()
+void CTCPServer::closeinl()
 {
 	if (m_bIsClosed) {
 		return;
@@ -90,7 +89,7 @@ return false;
 return true;
 }*/
 
-bool TCPServer::bind(const char* ip, int port)
+bool CTCPServer::bind(const char* ip, int port)
 {
 	struct sockaddr_in bind_addr;
 	int iret = uv_ip4_addr(ip, port, &bind_addr);
@@ -109,7 +108,7 @@ bool TCPServer::bind(const char* ip, int port)
 	return true;
 }
 
-bool TCPServer::bind6(const char* ip, int port)
+bool CTCPServer::bind6(const char* ip, int port)
 {
 	struct sockaddr_in6 bind_addr;
 	int iret = uv_ip6_addr(ip, port, &bind_addr);
@@ -129,7 +128,7 @@ bool TCPServer::bind6(const char* ip, int port)
 	return true;
 }
 
-bool TCPServer::listen(int backlog)
+bool CTCPServer::listen(int backlog)
 {
 	int iret = uv_listen((uv_stream_t*) &m_tcpHandle, backlog, AcceptConnection);
 	if (iret) {
@@ -142,7 +141,7 @@ bool TCPServer::listen(int backlog)
 	return true;
 }
 
-bool TCPServer::Start(const char* ip, int port)
+bool CTCPServer::Start(const char* ip, int port)
 {
 	*m_nServerIP = ip;
 	m_nServerPort = port;
@@ -173,7 +172,7 @@ bool TCPServer::Start(const char* ip, int port)
 	return m_nStartsSatus == CONNECT_FINISH;
 }
 
-bool TCPServer::Start6(const char* ip, int port)
+bool CTCPServer::Start6(const char* ip, int port)
 {
 	*m_nServerIP = ip;
 	m_nServerPort = port;
@@ -204,9 +203,9 @@ bool TCPServer::Start6(const char* ip, int port)
 	return m_nStartsSatus == CONNECT_FINISH;
 }
 
-void TCPServer::StartThread(void* arg)
+void CTCPServer::StartThread(void* arg)
 {
-	TCPServer* theclass = (TCPServer*)arg;
+	CTCPServer* theclass = (CTCPServer*)arg;
 	theclass->m_nStartsSatus = CONNECT_FINISH;
 	theclass->run();
 	//the server is close when come here
@@ -219,9 +218,9 @@ void TCPServer::StartThread(void* arg)
 	theclass->CloseCB(-1);
 }
 
-void TCPServer::AcceptConnection(uv_stream_t* server, int status)
+void CTCPServer::AcceptConnection(uv_stream_t* server, int status)
 {
-	TCPServer* tcpsock = (TCPServer*)server->data;
+	CTCPServer* tcpsock = (CTCPServer*)server->data;
 	assert(tcpsock);
 	if (status) {
 		*(tcpsock->m_strErrMsg) = GetUVError(status);
@@ -258,13 +257,13 @@ void TCPServer::AcceptConnection(uv_stream_t* server, int status)
 	tmptcp->packet_->Start(tcpsock->m_cPacketHead, tcpsock->m_cPacketTail);
 	iret = uv_read_start((uv_stream_t*)&tmptcp->tcphandle, AllocBufferForRecv, AfterRecv);
 	if (iret) {
-		uv_close((uv_handle_t*)&tmptcp->tcphandle, TCPServer::RecycleTcpHandle);
+		uv_close((uv_handle_t*)&tmptcp->tcphandle, CTCPServer::RecycleTcpHandle);
 		*(tcpsock->m_strErrMsg) = GetUVError(iret);
 		// LOGE(tcpsock->errmsg_);
 		return;
 	}
 	AcceptClient* cdata = new AcceptClient(tmptcp, clientid, tcpsock->m_cPacketHead, tcpsock->m_cPacketTail, &tcpsock->m_loop); //delete on SubClientClosed
-	cdata->SetClosedCB(TCPServer::SubClientClosed, tcpsock);
+	cdata->SetClosedCB(CTCPServer::SubClientClosed, tcpsock);
 	uv_mutex_lock(&tcpsock->m_mutexClients);
 	tcpsock->m_mapClientsList->insert(std::make_pair(clientid, cdata)); //add accept client
 	uv_mutex_unlock(&tcpsock->m_mutexClients);
@@ -274,7 +273,7 @@ void TCPServer::AcceptConnection(uv_stream_t* server, int status)
 	return;
 }
 
-void TCPServer::SetRecvCB(int clientid, ServerRecvCB cb, void* userdata)
+void CTCPServer::SetRecvCB(int clientid, ServerRecvCB cb, void* userdata)
 {
 	//     uv_mutex_lock(&mutex_clients_);
 	//     auto itfind = m_mapClientsList->find(clientid);
@@ -286,32 +285,32 @@ void TCPServer::SetRecvCB(int clientid, ServerRecvCB cb, void* userdata)
 
 
 /* Fully close a loop */
-void TCPServer::CloseWalkCB(uv_handle_t* handle, void* arg)
+void CTCPServer::CloseWalkCB(uv_handle_t* handle, void* arg)
 {
-	TCPServer* theclass = (TCPServer*)arg;
+	CTCPServer* theclass = (CTCPServer*)arg;
 	if (!uv_is_closing(handle)) {
 		uv_close(handle, AfterServerClose);
 	}
 }
 
-void TCPServer::AfterServerClose(uv_handle_t* handle)
+void CTCPServer::AfterServerClose(uv_handle_t* handle)
 {
-	TCPServer* theclass = (TCPServer*)handle->data;
+	CTCPServer* theclass = (CTCPServer*)handle->data;
 	fprintf(stdout, "Close CB handle %p\n", handle);
 }
 
-void TCPServer::DeleteTcpHandle(uv_handle_t* handle)
+void CTCPServer::DeleteTcpHandle(uv_handle_t* handle)
 {
 	TcpClientCtx* theclass = (TcpClientCtx*)handle->data;
 	FreeTcpClientCtx(theclass);
 }
 
-void TCPServer::RecycleTcpHandle(uv_handle_t* handle)
+void CTCPServer::RecycleTcpHandle(uv_handle_t* handle)
 {
 	//the handle on TcpClientCtx had closed.
 	TcpClientCtx* theclass = (TcpClientCtx*)handle->data;
 	assert(theclass);
-	TCPServer* parent = (TCPServer*)theclass->parent_server;
+	CTCPServer* parent = (CTCPServer*)theclass->parent_server;
 	if (parent->m_listAvaiTcpHandle.size() > MAXLISTSIZE) {
 		FreeTcpClientCtx(theclass);
 	} else {
@@ -319,24 +318,24 @@ void TCPServer::RecycleTcpHandle(uv_handle_t* handle)
 	}
 }
 
-int TCPServer::GetAvailaClientID() const
+int CTCPServer::GetAvailaClientID() const
 {
 	static int s_id = 0;
 	return ++s_id;
 }
 
-void TCPServer::NewConnect(int clientid)
+void CTCPServer::NewConnect(int clientid)
 {
 	fprintf(stdout, "new connect:%d\n", clientid);
 	this->SetRecvCB(clientid, NULL, NULL);
 }
 
-void TCPServer::CloseCB(int clientid)
+void CTCPServer::CloseCB(int clientid)
 {
 	fprintf(stdout, "cliend %d close\n", clientid);
 }
 
-void TCPServer::StartLog(const char* logpath /*= nullptr*/)
+void CTCPServer::StartLog(const char* logpath /*= nullptr*/)
 {
 	/*zsummer::log4z::ILog4zManager::GetInstance()->SetLoggerMonthdir(LOG4Z_MAIN_LOGGER_ID, true);
 	zsummer::log4z::ILog4zManager::GetInstance()->SetLoggerDisplay(LOG4Z_MAIN_LOGGER_ID, true);
@@ -348,14 +347,14 @@ void TCPServer::StartLog(const char* logpath /*= nullptr*/)
 	zsummer::log4z::ILog4zManager::GetInstance()->Start();*/
 }
 
-void TCPServer::StopLog()
+void CTCPServer::StopLog()
 {
 	// zsummer::log4z::ILog4zManager::GetInstance()->Stop();
 }
 
-void TCPServer::SubClientClosed(int clientid, void* userdata)
+void CTCPServer::SubClientClosed(int clientid, void* userdata)
 {
-	TCPServer* theclass = (TCPServer*)userdata;
+	CTCPServer* theclass = (CTCPServer*)userdata;
 	uv_mutex_lock(&theclass->m_mutexClients);
 	auto itfind = theclass->m_mapClientsList->find(clientid);
 	if (itfind != theclass->m_mapClientsList->end()) {
@@ -373,16 +372,16 @@ void TCPServer::SubClientClosed(int clientid, void* userdata)
 	uv_mutex_unlock(&theclass->m_mutexClients);
 }
 
-void TCPServer::AsyncCloseCB(uv_async_t* handle)
+void CTCPServer::AsyncCloseCB(uv_async_t* handle)
 {
-	TCPServer* theclass = (TCPServer*)handle->data;
+	CTCPServer* theclass = (CTCPServer*)handle->data;
 	if (theclass->m_bIsUserAskForClosed) {
 		theclass->closeinl();
 	}
 	return;
 }
 
-void TCPServer::Close()
+void CTCPServer::Close()
 {
 	if (m_bIsClosed) {
 		return;
@@ -391,7 +390,7 @@ void TCPServer::Close()
 	uv_async_send(&m_asyncHandle);
 }
 
-bool TCPServer::broadcast(const std::string& senddata, std::vector<int> excludeid)
+bool CTCPServer::broadcast(const std::string& senddata, std::vector<int> excludeid)
 {
 	if (senddata.empty()) {
 		// LOGI("broadcast data is empty.");
@@ -420,7 +419,7 @@ bool TCPServer::broadcast(const std::string& senddata, std::vector<int> excludei
 	return true;
 }
 
-bool TCPServer::sendinl(const std::string& senddata, TcpClientCtx* client)
+bool CTCPServer::sendinl(const std::string& senddata, TcpClientCtx* client)
 {
 	if (senddata.empty()) {
 		// LOGI("send data is empty.");
@@ -451,7 +450,7 @@ bool TCPServer::sendinl(const std::string& senddata, TcpClientCtx* client)
 	return true;
 }
 
-int TCPServer::ParsePacket( const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient)
+int CTCPServer::ParsePacket( const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient)
 {
 	return 0;
 }
@@ -570,7 +569,7 @@ void AfterRecv(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 void AfterSend(uv_write_t* req, int status)
 {
 	TcpClientCtx* theclass = (TcpClientCtx*)req->data;
-	TCPServer* parent = (TCPServer*)theclass->parent_server;
+	CTCPServer* parent = (CTCPServer*)theclass->parent_server;
 	if (parent->m_listWriteParam.size() > MAXLISTSIZE) {
 		FreeWriteParam((write_param*)req);
 	} else {

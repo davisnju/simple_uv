@@ -3,7 +3,7 @@
 #include "../message_define/TestMessage.h"
 
 class CTestGateWay :
-	public TCPServer
+	public CTCPServer
 {
 public:
 	CTestGateWay();
@@ -12,11 +12,11 @@ public:
 protected:
 	BEGIN_UV_BIND
 		UV_BIND(CTestMsg::MSG_ID, CTestMsg)
-	END_UV_BIND(TCPServer)
+	END_UV_BIND(CTCPServer)
 
 	BEGIN_UV_THREAD_BIND
 	UV_THREAD_BIND(CTestMsg::MSG_ID, CTestMsg)
-	END_UV_THREAD_BIND(TCPServer)
+	END_UV_THREAD_BIND(CTCPServer)
 
 	int OnUvMessage(const CTestMsg &msg, TcpClientCtx *pClient);
 

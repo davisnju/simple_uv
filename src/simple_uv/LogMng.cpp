@@ -38,3 +38,8 @@ CLogMng::~CLogMng(void)
 {
 }
 
+void CLogMng::StopLog()
+{
+	zsummer::log4z::ILog4zManager::getInstance()->stop();
+}
+

@@ -3,7 +3,7 @@
 
 #include <string>
 #include "uv.h"
-#include "simple_uv_export.h"
+#include "SimpleUVExport.h"
 
 // 互斥量，配合CUVAutoLock使用更方便
 class SUV_EXPORT CUVMutex

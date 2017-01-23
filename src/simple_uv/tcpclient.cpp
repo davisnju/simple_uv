@@ -1,12 +1,12 @@
 ﻿// #include "stdafx.h"
 #include "tcpclient.h"
-#include "thread_uv.h"
+#include "UVThread.h"
 // #include "log4z.h"
 #define MAXLISTSIZE 20
 
 
 /*****************************************TCP Client*************************************************************/
-TCPClient::TCPClient()
+CTCPClient::CTCPClient()
     : m_nConnectStatus(CONNECT_DIS), m_buferWrite(BUFFER_SIZE)
     , m_bIsIPv6(false), m_bIsReconnecting(false)
 {
@@ -17,7 +17,7 @@ TCPClient::TCPClient()
 }
 
 
-TCPClient::~TCPClient()
+CTCPClient::~CTCPClient()
 {
     Close();
     uv_thread_join(&m_threadConnect);
@@ -30,9 +30,9 @@ TCPClient::~TCPClient()
     // LOGI("client(" << this << ")exit");
 }
 
-bool TCPClient::init()
+bool CTCPClient::init()
 {
-	if (CTcpHandle::init())
+	if (CTCPHandle::init())
 	{
 		m_handleClient->tcphandle = this->m_tcpHandle;
 		m_handleClient->tcphandle.data = m_handleClient;
@@ -55,7 +55,7 @@ bool TCPClient::init()
 	return false;
 }
 
-void TCPClient::closeinl()
+void CTCPClient::closeinl()
 {
     if (m_bIsClosed) {
         return;
@@ -65,9 +65,9 @@ void TCPClient::closeinl()
     // LOGI("client(" << this << ")close");
 }
 
-void TCPClient::ReConnectCB(NET_EVENT_TYPE eventtype)
+void CTCPClient::ReConnectCB(NET_EVENT_TYPE eventtype)
 {
-	TCPClient* client = this;
+	CTCPClient* client = this;
 	if (NET_EVENT_TYPE_RECONNECT == eventtype) {
 	}
 	else {
@@ -76,7 +76,7 @@ void TCPClient::ReConnectCB(NET_EVENT_TYPE eventtype)
 }
 
 
-bool TCPClient::Connect(const char* ip, int port)
+bool CTCPClient::Connect(const char* ip, int port)
 {
     closeinl();
     if (!init()) {
@@ -122,7 +122,7 @@ bool TCPClient::Connect(const char* ip, int port)
     }
 }
 
-bool TCPClient::Connect6(const char* ip, int port)
+bool CTCPClient::Connect6(const char* ip, int port)
 {
     closeinl();
     if (!init()) {
@@ -168,16 +168,16 @@ bool TCPClient::Connect6(const char* ip, int port)
     }
 }
 
-void TCPClient::ConnectThread(void* arg)
+void CTCPClient::ConnectThread(void* arg)
 {
-    TCPClient* pclient = (TCPClient*)arg;
+    CTCPClient* pclient = (CTCPClient*)arg;
     pclient->run();
 }
 
-void TCPClient::AfterConnect(uv_connect_t* handle, int status)
+void CTCPClient::AfterConnect(uv_connect_t* handle, int status)
 {
     TcpClientCtx* theclass = (TcpClientCtx*)handle->handle->data;
-    TCPClient* parent = (TCPClient*)theclass->parent_server;
+    CTCPClient* parent = (CTCPClient*)theclass->parent_server;
     if (status) {
         parent->m_nConnectStatus = CONNECT_ERROR;
         *(parent->m_strErrMsg) = GetUVError(status);
@@ -186,7 +186,7 @@ void TCPClient::AfterConnect(uv_connect_t* handle, int status)
         if (parent->m_bIsReconnecting) {//reconnect failure, restart timer to trigger reconnect.
             uv_timer_stop(&parent->m_timerReconnet);
             parent->m_nRepeatTime *= 2;
-            uv_timer_start(&parent->m_timerReconnet, TCPClient::ReconnectTimer, parent->m_nRepeatTime, parent->m_nRepeatTime);
+            uv_timer_start(&parent->m_timerReconnet, CTCPClient::ReconnectTimer, parent->m_nRepeatTime, parent->m_nRepeatTime);
         }
         return;
     }
@@ -209,7 +209,7 @@ void TCPClient::AfterConnect(uv_connect_t* handle, int status)
     }
 }
 
-int TCPClient::Send(const char* data, std::size_t len)
+int CTCPClient::Send(const char* data, std::size_t len)
 {
     if (!data || len <= 0) {
         *m_strErrMsg = "send data is null or len less than zero.";
@@ -234,18 +234,18 @@ int TCPClient::Send(const char* data, std::size_t len)
 }
 
 
-void TCPClient::AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
+void CTCPClient::AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
 {
     TcpClientCtx* theclass = (TcpClientCtx*)handle->data;
     assert(theclass);
     *buf = theclass->read_buf_;
 }
 
-void TCPClient::AfterRecv(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
+void CTCPClient::AfterRecv(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf)
 {
     TcpClientCtx* theclass = (TcpClientCtx*)handle->data;
     assert(theclass);
-    TCPClient* parent = (TCPClient*)theclass->parent_server;
+    CTCPClient* parent = (CTCPClient*)theclass->parent_server;
     if (nread < 0) {
 		parent->ReConnectCB(NET_EVENT_TYPE_DISCONNECT);
 
@@ -272,9 +272,9 @@ void TCPClient::AfterRecv(uv_stream_t* handle, ssize_t nread, const uv_buf_t* bu
     }
 }
 
-void TCPClient::AfterSend(uv_write_t* req, int status)
+void CTCPClient::AfterSend(uv_write_t* req, int status)
 {
-    TCPClient* theclass = (TCPClient*)req->data;
+    CTCPClient* theclass = (CTCPClient*)req->data;
     if (status < 0) {
         if (theclass->m_listWriteParam->size() > MAXLISTSIZE) {
             FreeWriteParam((write_param*)req);
@@ -289,31 +289,31 @@ void TCPClient::AfterSend(uv_write_t* req, int status)
 }
 
 /* Fully close a loop */
-void TCPClient::CloseWalkCB(uv_handle_t* handle, void* arg)
+void CTCPClient::CloseWalkCB(uv_handle_t* handle, void* arg)
 {
-    TCPClient* theclass = (TCPClient*)arg;
+    CTCPClient* theclass = (CTCPClient*)arg;
     if (!uv_is_closing(handle)) {
         uv_close(handle, AfterClientClose);
     }
 }
 
-void TCPClient::AfterClientClose(uv_handle_t* handle)
+void CTCPClient::AfterClientClose(uv_handle_t* handle)
 {
-    TCPClient* theclass = (TCPClient*)handle->data;
+    CTCPClient* theclass = (CTCPClient*)handle->data;
     fprintf(stdout, "Close CB handle %p\n", handle);
     if (handle == (uv_handle_t*)&theclass->m_handleClient->tcphandle && theclass->m_bIsReconnecting) {
         //closed, start reconnect timer
         int iret = 0;
-        iret = uv_timer_start(&theclass->m_timerReconnet, TCPClient::ReconnectTimer, theclass->m_nRepeatTime, theclass->m_nRepeatTime);
+        iret = uv_timer_start(&theclass->m_timerReconnet, CTCPClient::ReconnectTimer, theclass->m_nRepeatTime, theclass->m_nRepeatTime);
         if (iret) {
-            uv_close((uv_handle_t*)&theclass->m_timerReconnet, TCPClient::AfterClientClose);
+            uv_close((uv_handle_t*)&theclass->m_timerReconnet, CTCPClient::AfterClientClose);
             // // LOGI(GetUVError(iret));
             return;
         }
     }
 }
 
-void TCPClient::StartLog(const char* logpath /*= nullptr*/)
+void CTCPClient::StartLog(const char* logpath /*= nullptr*/)
 {
     /*zsummer::log4z::ILog4zManager::GetInstance()->SetLoggerMonthdir(LOG4Z_MAIN_LOGGER_ID, true);
     zsummer::log4z::ILog4zManager::GetInstance()->SetLoggerDisplay(LOG4Z_MAIN_LOGGER_ID, false);
@@ -325,7 +325,7 @@ void TCPClient::StartLog(const char* logpath /*= nullptr*/)
     zsummer::log4z::ILog4zManager::GetInstance()->Start();*/
 }
 
-void TCPClient::StopLog()
+void CTCPClient::StopLog()
 {
     // zsummer::log4z::ILog4zManager::GetInstance()->Stop();
 }
@@ -343,7 +343,7 @@ void TCPClient::AsyncCB(uv_async_t* handle)
     theclass->send_inl(NULL);
 }*/
 
-void TCPClient::send_inl(uv_write_t* req /*= NULL*/)
+void CTCPClient::send_inl(uv_write_t* req /*= NULL*/)
 {
     write_param* writep = (write_param*)req;
     if (writep) {
@@ -377,12 +377,12 @@ void TCPClient::send_inl(uv_write_t* req /*= NULL*/)
     }
 }
 
-int TCPClient::ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient)
+int CTCPClient::ParsePacket(const NetPacket& packet, const unsigned char* buf, TcpClientCtx *pClient)
 {
 	return 0;
 }
 
-void TCPClient::Close()
+void CTCPClient::Close()
 {
     if (m_bIsClosed) {
         return;
@@ -391,7 +391,7 @@ void TCPClient::Close()
     uv_async_send(&m_asyncHandle);
 }
 
-bool TCPClient::StartReconnect(void)
+bool CTCPClient::StartReconnect(void)
 {
     m_bIsReconnecting = true;
     m_handleClient->tcphandle.data = this;
@@ -399,7 +399,7 @@ bool TCPClient::StartReconnect(void)
     return true;
 }
 
-void TCPClient::StopReconnect(void)
+void CTCPClient::StopReconnect(void)
 {
     m_bIsReconnecting = false;
     m_handleClient->tcphandle.data = m_handleClient;
@@ -407,9 +407,9 @@ void TCPClient::StopReconnect(void)
     uv_timer_stop(&m_timerReconnet);
 }
 
-void TCPClient::ReconnectTimer(uv_timer_t* handle)
+void CTCPClient::ReconnectTimer(uv_timer_t* handle)
 {
-    TCPClient* theclass = (TCPClient*)handle->data;
+    CTCPClient* theclass = (CTCPClient*)handle->data;
     if (!theclass->m_bIsReconnecting) {
         return;
     }
@@ -453,10 +453,10 @@ void TCPClient::ReconnectTimer(uv_timer_t* handle)
     //reconnect failure, restart timer to trigger reconnect.
     uv_timer_stop(handle);
     theclass->m_nRepeatTime *= 2;
-    uv_timer_start(handle, TCPClient::ReconnectTimer, theclass->m_nRepeatTime, theclass->m_nRepeatTime);
+    uv_timer_start(handle, CTCPClient::ReconnectTimer, theclass->m_nRepeatTime, theclass->m_nRepeatTime);
 }
 
-void TCPClient::CloseCB(int clientid, void* userdata)
+void CTCPClient::CloseCB(int clientid, void* userdata)
 {
 	this->Close();
 }

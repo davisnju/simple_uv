@@ -4,7 +4,7 @@
 TcpClientCtx* AllocTcpClientCtx(void* parentserver)
 {
 	TcpClientCtx* ctx = (TcpClientCtx*)malloc(sizeof(*ctx));
-	ctx->packet_ = new PacketSync;
+	ctx->packet_ = new CPacketSync;
 	ctx->read_buf_.base = (char*)malloc(BUFFER_SIZE);
 	ctx->read_buf_.len = BUFFER_SIZE;
 	ctx->parent_server = parentserver;

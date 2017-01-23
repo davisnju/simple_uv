@@ -6,21 +6,21 @@
 #include <string>
 #include <list>
 #include "uv.h"
-#include "packet_sync.h"
-#include "pod_circularbuffer.h"
+#include "PacketSync.h"
+#include "PodCircularBuffer.h"
 #include "BaseMsgDefine.h"
-#include "simple_uv_export.h"
+#include "SimpleUVExport.h"
 #include "TcpHandle.h"
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE (1024*10)
 #endif
 
 
-class SUV_EXPORT TCPClient : public CTcpHandle
+class SUV_EXPORT CTCPClient : public CTCPHandle
 {
 public:
-	 TCPClient();
-	virtual  ~TCPClient();
+	 CTCPClient();
+	virtual  ~CTCPClient();
 	static  void StartLog(const char* logpath = nullptr);
 	static  void StopLog();
 public:
@@ -69,13 +69,13 @@ private:
 	TcpClientCtx *m_handleClient;
 
 	std::list<write_param*> *m_listWriteParam;    //Availa write_t
-	PodCircularBuffer<char> m_buferWrite;         //the data prepare to send
+	CPodCircularBuffer<char> m_buferWrite;         //the data prepare to send
 };
 
 #endif // TCPCLIENT_H
 
 template<class TYPE>
-int TCPClient::SendUvMessage(const TYPE& msg, size_t nMsgType)
+int CTCPClient::SendUvMessage(const TYPE& msg, size_t nMsgType)
 {
 	string str = this->PacketData(msg, nMsgType);
 	return this->Send(&str[0], str.length());

@@ -1,7 +1,7 @@
-#include "packet_sync.h"
+#include "PacketSync.h"
 #include "openssl/md5.h"
 
-void PacketSync::recvdata(const unsigned char* data, size_t len)
+void CPacketSync::recvdata(const unsigned char* data, size_t len)
 { //接收到数据，把数据保存在circulebuffer_
 	size_t iret = 0;
 	while (iret < len || truepacketlen >= NET_PACKAGE_HEADLEN + 2) {

@@ -1,5 +1,5 @@
 #pragma once
-#include "thread_uv.h"
+#include "UVThread.h"
 #include "../message_define/TestMessage.h"
 class CTestServerCenter :
 	public CUVThread

@@ -1,7 +1,7 @@
 #pragma once
-#include "simple_locks.h"
-#include "simple_uv_export.h"
-#include "uv_msg_framing.h"
+#include "SimpleLocks.h"
+#include "SimpleUVExport.h"
+#include "UVMsgFraming.h"
 
 //º¯Êý
 #if defined (WIN32) || defined(_WIN32)
