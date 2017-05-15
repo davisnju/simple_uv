@@ -2,16 +2,24 @@
 #include <string>
 #include "TestGateWay.h"
 #include "TestServerCenter.h"
+#include "LogMng.h"
 
 using namespace std;
-using namespace uv;
+
 bool is_eist = false;
 int call_time = 0;
 
-
+void OnInstanceExit()
+{
+	CLogMng::GetInstance()->StopLog();
+}
 
 int main(int argc, char** argv)
 {
+	::atexit(OnInstanceExit);
+
+	CLogMng::GetInstance();
+
 	CTestGateWay server;
 
 	if(!server.Start("0.0.0.0",12345)) {

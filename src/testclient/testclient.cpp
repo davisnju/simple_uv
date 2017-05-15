@@ -4,24 +4,32 @@
 #include <iostream>
 #include <string>
 #include "Test.h"
-#include "thread_uv.h"
+#include "UVThread.h"
+#include "LogMng.h"
 using namespace std;
-using namespace uv;
 
 std::string serverip;
 int call_time = 0;
 bool is_exist = false;
 
 
+void OnInstanceExit()
+{
+	CLogMng::GetInstance()->StopLog();
+}
+
 int main(int argc, char** argv)
 {
+	::atexit(OnInstanceExit);
+
+	CLogMng::GetInstance();
+
 	if (argc != 3) {
 		fprintf(stdout, "usage: %s server_ip_address clientcount\neg.%s 192.168.1.1 50\n", argv[0], argv[0]);
 		return 0;
 	}
 	serverip = argv[1];
 
-	const int clientsize = std::stoi(argv[2]);
 	CTest pClients;
 
 	if (!pClients.Connect(serverip.c_str(), 12345)) {

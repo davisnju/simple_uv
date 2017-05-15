@@ -11,7 +11,7 @@ SOURCE = $(wildcard $(WORK_ROOT)/src/simple_uv/*.cpp)
 ##################################################################### #
 
 #5、指定您附加的搜索编译目录，不要指到其他模块内部
-USER_CC_INC = -I$(LIBUV_DIR) -I$(SRC_DIR)
+USER_CC_INC = -I$(LIBUV_DIR) -I$(SRC_DIR) -I$(WORK_ROOT)/src -I$(WORK_ROOT)/src/openssl/include/
 
 ######################################################################
 
@@ -26,7 +26,7 @@ USER_LINK_INC = -L$(WORK_ROOT)/lib
 ######################################################################
 
 #8、指定您附加的库文件，例如：-lhello（假设您的动态库名称为libhello.so）
-USER_LINK_LIBS = -luv
+USER_LINK_LIBS = -luv -lcrypto -lssl
 
 ######################################################################
 

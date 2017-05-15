@@ -20,7 +20,15 @@ public:
 		MSG_ID = TEST_MSG
 	};
 
+	CTestMsg()
+		: m_nSessionID(0)
+		, m_nTimes(0)
+	{
+
+	}
+
 	int m_nSessionID;
+	int m_nTimes;
 };
 #endif
 

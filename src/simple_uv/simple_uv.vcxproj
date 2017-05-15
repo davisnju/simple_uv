@@ -41,7 +41,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)src\libuv\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)src\libuv\include\;$(SolutionDir)src\;$(SolutionDir)src\openssl\include\;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <LibraryPath>$(SolutionDir)lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <IntDir>$(SolutionDir)temp\$(Configuration)\</IntDir>
@@ -54,7 +54,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SIMPLE_UV_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SIMPLE_UV_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
@@ -88,23 +88,32 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseMsgDefine.h" />
-    <ClInclude Include="simple_locks.h" />
-    <ClInclude Include="simple_uv_export.h" />
-    <ClInclude Include="tcpclient.h" />
-    <ClInclude Include="TcpHandle.h" />
-    <ClInclude Include="tcpserver.h" />
-    <ClInclude Include="thread_uv.h" />
+    <ClInclude Include="log4z.h" />
+    <ClInclude Include="LogMng.h" />
+    <ClInclude Include="PacketSync.h" />
+    <ClInclude Include="PodCircularBuffer.h" />
+    <ClInclude Include="SimpleLocks.h" />
+    <ClInclude Include="SimpleUVExport.h" />
+    <ClInclude Include="TCPClient.h" />
+    <ClInclude Include="TCPHandle.h" />
+    <ClInclude Include="TCPServer.h" />
+    <ClInclude Include="ThreadMsgBase.h" />
+    <ClInclude Include="UVThread.h" />
     <ClInclude Include="UVThreadMng.h" />
-    <ClInclude Include="uv_msg_framing.h" />
+    <ClInclude Include="UVMsgFraming.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseMsgDefine.cpp" />
-    <ClCompile Include="tcpclient.cpp" />
-    <ClCompile Include="TcpHandle.cpp" />
-    <ClCompile Include="tcpserver.cpp" />
-    <ClCompile Include="thread_uv.cpp" />
+    <ClCompile Include="log4z.cpp" />
+    <ClCompile Include="LogMng.cpp" />
+    <ClCompile Include="PacketSync.cpp" />
+    <ClCompile Include="TCPClient.cpp" />
+    <ClCompile Include="TCPHandle.cpp" />
+    <ClCompile Include="TCPServer.cpp" />
+    <ClCompile Include="ThreadMsgBase.cpp" />
+    <ClCompile Include="UVThread.cpp" />
     <ClCompile Include="UVThreadMng.cpp" />
-    <ClCompile Include="uv_msg_framing.cpp" />
+    <ClCompile Include="UVMsgFraming.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
