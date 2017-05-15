@@ -43,8 +43,6 @@ AcceptClient也同样进行改进.AcceptClient不需要Close,直接close_inl就�
 #define BUFFER_SIZE (1024*10)
 #endif
 
-namespace uv
-{
 	/***************************************************************Server*******************************************************************************/
 	class AcceptClient;
 	
@@ -109,7 +107,7 @@ namespace uv
 	};
 
 	template<class TYPE>
-	int uv::TCPServer::SendUvMessage(const TYPE& msg, size_t nMsgType, TcpClientCtx *pClient)
+	int TCPServer::SendUvMessage(const TYPE& msg, size_t nMsgType, TcpClientCtx *pClient)
 	{
 		return this->sendinl(this->PacketData(msg, nMsgType), pClient); 
 	}
@@ -168,7 +166,6 @@ namespace uv
 	void AllocBufferForRecv(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf);
 	void AfterRecv(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf);
 	void AfterSend(uv_write_t* req, int status);
-}
 
 
 #endif // TCPSERVER_H

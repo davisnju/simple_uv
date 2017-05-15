@@ -6,8 +6,6 @@
 #define MAXLISTSIZE 20
 
 
-namespace uv
-{
 /*****************************************TCP Server*************************************************************/
 TCPServer::TCPServer()
     : m_nStartsSatus(CONNECT_DIS)
@@ -614,5 +612,3 @@ void FreeWriteParam(write_param* param)
     free(param->buf_.base);
     free(param);
 }*/
-
-}
